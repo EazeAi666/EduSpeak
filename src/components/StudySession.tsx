@@ -27,6 +27,10 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
   React.useEffect(() => {
     async function fetchContent() {
       try {
+        if (!ai.apiKey) {
+          throw new Error("AI service is not configured. Please add GEMINI_API_KEY to environment variables.");
+        }
+
         const prompt = `As an expert educator in ${department}, provide a detailed, professional study guide for NCE (National Certificate in Education) students on the topic: "${topic}" within the module "${moduleTitle}". 
         Include:
         1. Learning Objectives

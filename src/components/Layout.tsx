@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Book, GraduationCap, Languages, Library, Search, User } from 'lucide-react';
+import { Book, Download, GraduationCap, Languages, Library, Search, User } from 'lucide-react';
 import { View } from '../types';
 import { cn } from '../lib/utils';
 import { auth, signIn, signOut } from '../lib/firebase';
@@ -14,10 +14,33 @@ interface LayoutProps {
 
 export default function Layout({ currentView, setView, children }: LayoutProps) {
   const [user, setUser] = React.useState<FirebaseUser | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+  const [isInstallable, setIsInstallable] = React.useState(false);
 
   React.useEffect(() => {
     return onAuthStateChanged(auth, (u) => setUser(u));
   }, []);
+
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   const navItems = [
     { id: 'home', label: 'Dashboard', icon: GraduationCap },
@@ -53,7 +76,17 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
           ))}
         </div>
 
-        <div className="mt-auto">
+        <div className="mt-auto space-y-6 flex flex-col items-center">
+          {isInstallable && (
+            <button 
+              onClick={handleInstall}
+              className="p-3 rounded-xl bg-[#5A5A40]/5 text-[#5A5A40] hover:bg-[#5A5A40] hover:text-white transition-all animate-pulse"
+              title="Install App"
+            >
+              <Download className="w-6 h-6" />
+            </button>
+          )}
+
           {user ? (
             <button 
               onClick={() => signOut()}
@@ -86,7 +119,12 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
           <GraduationCap className="w-8 h-8 text-[#5A5A40]" />
           <span className="font-serif font-bold text-lg">EduSpeak</span>
         </div>
-        <div>
+        <div className="flex items-center gap-4">
+          {isInstallable && (
+            <button onClick={handleInstall} className="text-[#5A5A40]">
+              <Download className="w-6 h-6" />
+            </button>
+          )}
           {user ? (
             <button onClick={() => signOut()}>
               <img src={user.photoURL || ''} alt="" className="w-8 h-8 rounded-full" />

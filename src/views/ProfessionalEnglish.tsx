@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, CheckCircle2, ChevronRight, Presentation, Globe, GraduationCap } from 'lucide-react';
+import { BookOpen, CheckCircle2, ChevronRight, Presentation, Globe, GraduationCap, Search, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { TRAINING_MODULES } from '../constants';
 import StudySession from '../components/StudySession';
@@ -12,8 +12,16 @@ export default function Training() {
   const [activeModuleId, setActiveModuleId] = React.useState<string | null>(null);
   const [studyTopic, setStudyTopic] = React.useState<string | null>(null);
   const [quizMode, setQuizMode] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
-  const filteredModules = TRAINING_MODULES.filter(m => m.department === activeDept);
+  const filteredModules = TRAINING_MODULES
+    .filter(m => {
+      const matchesSearch = m.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          m.topics.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      if (searchQuery) return matchesSearch;
+      return m.department === activeDept;
+    });
   const currentModule = TRAINING_MODULES.find(m => m.id === activeModuleId);
 
   // Auto-select first module of department if none selected
@@ -54,7 +62,27 @@ export default function Training() {
           </p>
         </div>
         
-        <div className="flex bg-white p-1 rounded-2xl border border-[#1A1A1A]/5 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="relative group w-full md:w-64">
+            <input 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search topics..."
+              className="w-full bg-white border border-[#1A1A1A]/10 rounded-xl py-2 pl-10 pr-10 text-sm focus:border-[#5A5A40]/40 outline-none transition-all shadow-sm"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1A1A1A]/30 group-focus-within:text-[#5A5A40] transition-colors" />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1A1A1A]/30 hover:text-[#1A1A1A]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex bg-white p-1 rounded-2xl border border-[#1A1A1A]/5 shadow-sm">
           <button 
             onClick={() => setActiveDept('english')}
             className={cn(
@@ -74,7 +102,8 @@ export default function Training() {
             Social Studies
           </button>
         </div>
-      </header>
+      </div>
+    </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-4">

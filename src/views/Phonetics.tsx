@@ -56,6 +56,9 @@ export default function Phonetics() {
 
     setIsAnalyzing(true);
     try {
+      if (!ai.apiKey) {
+        throw new Error("AI Analysis requires an API key in environment variables.");
+      }
       // Convert blob to base64
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);

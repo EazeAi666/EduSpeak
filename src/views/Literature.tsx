@@ -1,12 +1,72 @@
 import React from 'react';
-import { motion } from 'motion/react';
-import { BookMarked, ChevronRight, Hash, Quote, Library } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { BookMarked, ChevronRight, Hash, Quote, Library, Search, Loader2 } from 'lucide-react';
 import { POEMS } from '../constants';
 import { Poem } from '../types';
 import { cn } from '../lib/utils';
+import { ai, MODELS } from '../lib/gemini';
+import { Type } from '@google/genai';
 
 export default function Literature() {
   const [selected, setSelected] = React.useState<Poem | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searching, setSearching] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const localFilteredPoems = POEMS.filter(p => 
+    p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    p.author.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleRequestPoem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setSearching(true);
+    setError(null);
+    try {
+      if (!ai.apiKey) {
+        throw new Error("AI Librarian is offline. Please configure your GEMINI_API_KEY.");
+      }
+      const prompt = `Find or provide a famous classic or Nigerian poem titled or by "${searchQuery}". 
+      Include the title, author, full content (or a significant selection if very long), and a short literary analysis.
+      Focus on Nigerian poets if possible or world classics often taught in schools.`;
+
+      const result = await ai.models.generateContent({
+        model: MODELS.TEXT,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              author: { type: Type.STRING },
+              content: { type: Type.STRING },
+              analysis: { type: Type.STRING },
+            },
+            required: ['title', 'author', 'content', 'analysis']
+          }
+        }
+      });
+
+      if (result.text) {
+        const poemData = JSON.parse(result.text);
+        const newPoem: Poem = {
+          id: `ai-${Date.now()}`,
+          ...poemData,
+          category: 'requested'
+        };
+        setSelected(newPoem);
+        setSearchQuery('');
+      }
+    } catch (err) {
+      console.error('Poem search error:', err);
+      setError(err instanceof Error ? err.message : "Failed to find poem");
+    } finally {
+      setSearching(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -18,7 +78,7 @@ export default function Literature() {
         </header>
 
         <div className="space-y-3">
-          {POEMS.map((poem) => (
+          {localFilteredPoems.map((poem) => (
             <button
               key={poem.id}
               onClick={() => setSelected(poem)}
@@ -44,23 +104,46 @@ export default function Literature() {
               </p>
             </button>
           ))}
+          
+          {selected && selected.id.toString().startsWith('ai-') && (
+            <button
+              onClick={() => setSelected(selected)}
+              className="w-full text-left p-6 rounded-[2rem] transition-all duration-300 border bg-[#5A5A40] text-white border-transparent shadow-xl translate-x-2"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded-full bg-white/20 text-white">
+                  requested
+                </span>
+              </div>
+              <h3 className="text-xl font-bold mb-1">{selected.title}</h3>
+              <p className="text-sm text-white/70">
+                {selected.author}
+              </p>
+            </button>
+          )}
         </div>
 
-        <div className="p-6 bg-white rounded-[2rem] border border-[#1A1A1A]/5">
+        <div className="p-6 bg-white rounded-[2rem] border border-[#1A1A1A]/5 shadow-sm">
           <h4 className="font-serif text-lg mb-4">Request a Poem</h4>
           <p className="text-sm text-[#1A1A1A]/60 leading-relaxed mb-6">
             Looking for a specific Nigerian or classic poem for your lesson? Ask our AI Librarian.
           </p>
-          <div className="relative group">
+          <form onSubmit={handleRequestPoem} className="relative group">
             <input 
               type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Poem title or author..."
-              className="w-full bg-[#F5F2ED] rounded-2xl py-3 px-4 text-sm outline-none border border-transparent focus:border-[#5A5A40]/20 transition-all"
+              className="w-full bg-[#F5F2ED] rounded-2xl py-3 px-4 text-sm outline-none border border-transparent focus:border-[#5A5A40]/20 transition-all pr-12"
             />
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#5A5A40] text-white rounded-xl">
-              <ChevronRight className="w-4 h-4" />
+            <button 
+              disabled={searching}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#5A5A40] text-white rounded-xl hover:scale-105 transition-all disabled:opacity-50"
+            >
+              {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
             </button>
-          </div>
+          </form>
+          {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
         </div>
       </div>
 

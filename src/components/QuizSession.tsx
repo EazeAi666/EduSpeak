@@ -14,6 +14,7 @@ interface QuizSessionProps {
 export default function QuizSession({ moduleTitle, department, onBack }: QuizSessionProps) {
   const [questions, setQuestions] = React.useState<QuizQuestion[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [selectedOption, setSelectedOption] = React.useState<number | null>(null);
   const [score, setScore] = React.useState(0);
@@ -22,6 +23,9 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
   React.useEffect(() => {
     async function fetchQuiz() {
       try {
+        if (!ai.apiKey) {
+          throw new Error("AI Quiz generator is offline. Please check your API key.");
+        }
         const prompt = `Generate 5 high-quality, professional multiple-choice questions for a professional teaching certification (NCE) based on the module: "${moduleTitle}" in the "${department}" department. 
         Focus on practical classroom application and professional knowledge. Return as JSON array of objects with fields: question (string), options (array of 4 strings), correctAnswer (index 0-3), explanation (string explaining why).`;
 
@@ -51,6 +55,7 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
         }
       } catch (err) {
         console.error(err);
+        setError(err instanceof Error ? err.message : "Failed to generate quiz.");
       } finally {
         setLoading(false);
       }
@@ -71,9 +76,16 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 text-center px-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#5A5A40]" />
-        <p className="text-[#1A1A1A]/40 animate-pulse">Designing your professional assessment...</p>
+        {error ? (
+          <div className="space-y-4">
+             <p className="text-red-500 font-bold">{error}</p>
+             <button onClick={onBack} className="text-sm font-bold uppercase tracking-widest text-[#5A5A40]">Return to Dashboard</button>
+          </div>
+        ) : (
+          <p className="text-[#1A1A1A]/40 animate-pulse">Designing your professional assessment...</p>
+        )}
       </div>
     );
   }

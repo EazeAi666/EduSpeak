@@ -79,6 +79,71 @@ solo adagio in lontano
 fretting diminuendo counterpoint
 crescendo and concerto;...`,
     analysis: 'An evocative poem contrasting traditional African heritage with Western influence.'
+  },
+  {
+    id: '4',
+    title: 'Night Rain',
+    author: 'J.P. Clark',
+    category: 'nigerian',
+    content: `What parameter shall we use
+To measure the night?
+Is it by the duration of rain
+As it falls on our thatch?
+Drip-drop-drip-drop-drip...
+We can see the stars?
+The floor is wet and slippery
+Yet we sleep and dream.`,
+    analysis: 'A vivid portrayal of a rainy night in a rural Nigerian setting, focusing on nature and family.'
+  },
+  {
+    id: '5',
+    title: 'Heavensgate (Selection)',
+    author: 'Christopher Okigbo',
+    category: 'nigerian',
+    content: `BEFORE YOU, mother Idoto,
+naked I stand,
+before your watery presence,
+a prodigal,
+leaning on an oilbean;
+lost in your legend...`,
+    analysis: 'Okigbo\'s famous invocation of indigenous African spirituality, marking the return of the "prodigal" poet to his roots.'
+  },
+  {
+    id: '6',
+    title: 'The Fisherman\'s Invocation',
+    author: 'Gabriel Okara',
+    category: 'nigerian',
+    content: `The back-water ripples
+are like the wrinkles on the face of an old woman,
+and the stars are like
+the eyes of the children
+watching the canoe slide
+past the mangrove roots.`,
+    analysis: 'Explores the transition between old and new, tradition and change through the lens of a fisherman.'
+  },
+  {
+    id: '7',
+    title: 'Heritage of Liberty',
+    author: 'Nnamdi Azikiwe',
+    category: 'nigerian',
+    content: `Oh land of our birth,
+We pledge to thee our love and strength.
+From the creeks of the Delta
+To the hills of the North,
+One nation, one destiny...`,
+    analysis: 'A patriotic piece reflecting the aspirations of colonial-era Nigeria towards independence and unity.'
+  },
+  {
+    id: '8',
+    title: 'Postcard from Lagos',
+    author: 'Lola Shoneyin',
+    category: 'nigerian',
+    content: `Lagos is a lover 
+who only gives when you are not looking.
+A city of yellow buses and salt spray,
+where the heat is a second skin
+and every silence is a prayer...`,
+    analysis: 'A contemporary take on Nigeria\'s commercial capital, capturing its chaotic yet vibrant energy.'
   }
 ];
 
@@ -103,5 +168,103 @@ export const TRAINING_MODULES: Module[] = [
     description: 'Structure of the Nigerian state and democratic values.',
     department: 'social-studies',
     topics: ['Arms of Government', 'Local Government Administration', 'Electoral Process', 'Pressure Groups']
+  },
+  {
+    id: 'ss-3',
+    title: 'Nigerian History: Pre-Colonial Era',
+    description: 'Study of the ancient empires and kingdoms before the 1914 amalgamation.',
+    department: 'social-studies',
+    topics: ['The Nok Culture', 'The Kanem-Borno Empire', 'The Hausa States', 'The Oyo Empire', 'Benin Kingdom', 'Igbo-Ukwu Artifacts', 'Jukun and Nupe Kingdoms']
+  },
+  {
+    id: 'ss-4',
+    title: 'Nigerian History: Colonial Administration',
+    description: 'Impact of British rule and the path to independence.',
+    department: 'social-studies',
+    topics: ['The 1914 Amalgamation', 'Regionalism (The Richards Constitution)', 'Nationalist Movements', 'The 1960 Independence', 'Post-Independence Milestones', 'The 1963 Republican Status']
+  },
+  {
+    id: 'ss-5',
+    title: 'Physical Geography of Nigeria',
+    description: 'Relief, climate, and natural resources of the Nigerian landmass.',
+    department: 'social-studies',
+    topics: ['Relief and Drainage', 'Climatic Regions', 'Vegetation Zones', 'Mineral Resources', 'Major Rivers and Basins', 'Agricultural Belts']
+  },
+  {
+    id: 'ss-6',
+    title: 'History of Education in Nigeria',
+    description: 'From indigenous systems to Western educational models.',
+    department: 'social-studies',
+    topics: ['Traditional Apprenticeship', 'Islamic Education in the North', 'Missionary Schools', 'The National Policy on Education', 'UPE and 6-3-3-4 System']
+  },
+  {
+    id: 'ss-7',
+    title: 'Independence Heroes: The Triumvirate',
+    description: 'Study of Azikiwe, Awolowo, and Bello in the struggle for freedom.',
+    department: 'social-studies',
+    topics: ['Dr. Nnamdi Azikiwe (Zik)', 'Chief Obafemi Awolowo', 'Sir Ahmadu Bello', 'The Zikist Movement', 'Women in the Struggle (Funmilayo Ransome-Kuti)', 'The Anthony Enahoro Status Mission']
+  },
+  {
+    id: 'ss-8',
+    title: 'Modern Nigerian History & Geopolitics',
+    description: 'From the First Republic to the present day.',
+    department: 'social-studies',
+    topics: ['The Nigerian Civil War (1967-1970)', 'The Oil Boom Era', 'The Switch to Presidential System (1979)', 'The June 12 Struggle', 'The 1999 Return to Democracy', 'Nigeria in ECOWAS & AU']
+  },
+  {
+    id: 'npe-1',
+    title: 'National Policy on Education (NPE)',
+    description: 'Guidelines and philosophy of Nigerian education across levels. Essential for all NCE students.',
+    department: 'social-studies',
+    topics: ['Philosophy of Nigerian Education', 'Pre-Primary and Primary Education', 'Secondary Education (9-3-4 System)', 'Technical and Vocational Education', 'Mass Literacy and Adult Education', 'The Role of NCCE and NTI']
+  },
+  {
+    id: 'edu-111',
+    title: 'EDU 111: Introduction to Teaching Profession',
+    description: 'Fundamental concepts of teaching as a professional career in Nigeria. Understanding the TRCN role.',
+    department: 'social-studies',
+    topics: ['History of Teaching', 'Ethics of Teaching', 'Qualities of a Teacher', 'Teachers Registration Council of Nigeria (TRCN)', 'Teacher Professionalism']
+  },
+  {
+    id: 'edu-211',
+    title: 'EDU 211: Educational Psychology',
+    description: 'Understanding child development and learning theories in the classroom context.',
+    department: 'social-studies',
+    topics: ['Cognitive Development (Piaget)', 'Social Learning (Bandura)', 'Motivation in Learning', 'Intelligence and its Measurement', 'Classroom Management Psychology']
+  },
+  {
+    id: 'gse-111',
+    title: 'GSE 111: General English I',
+    description: 'Essential communication skills for tertiary students, focusing on grammar and basic writing.',
+    department: 'english',
+    topics: ['Parts of Speech', 'Sentence Structure', 'Reading Skills', 'Summary Writing', 'Punctuation Rules', 'Word Power and Vocabulary']
+  },
+  {
+    id: 'gse-121',
+    title: 'GSE 121: General English II',
+    description: 'Advanced communication involving academic writing and oral delivery.',
+    department: 'english',
+    topics: ['Expository Writing', 'Argumentative Essays', 'Oral Communication Skills', 'Library Study Skills', 'Speed Reading']
+  },
+  {
+    id: 'eng-111',
+    title: 'ENG 111: Introduction to Phonetics',
+    description: 'Scientific study of the sounds of the English language. Essential for NCE English majors.',
+    department: 'english',
+    topics: ['Vowel Sounds', 'Consonant Sounds', 'The Phonetic Alphabet (IPA)', 'Stress and Intonation', 'Transcribing English Words']
+  },
+  {
+    id: 'eng-112',
+    title: 'ENG 112: Introduction to English Literature',
+    description: 'Survey of literary genres and critical appreciation.',
+    department: 'english',
+    topics: ['Elements of Poetry', 'Drama and Theatre', 'Prose Fiction', 'Literary Criticism Basics', 'Nigerian Prose Fiction']
+  },
+  {
+    id: 'sos-111',
+    title: 'SOS 111: Issues and Problems of Social Studies',
+    description: 'Analyzing societal challenges in the Nigerian context.',
+    department: 'social-studies',
+    topics: ['Corruption and Integrity', 'Gender Equality', 'Poverty Alleviation', 'Drug Abuse and HIV/AIDS', 'Population Education']
   }
 ];

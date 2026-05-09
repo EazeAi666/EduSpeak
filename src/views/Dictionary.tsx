@@ -16,16 +16,22 @@ export default function Dictionary() {
   const [query, setQuery] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [result, setResult] = React.useState<WordData | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
 
     setLoading(true);
+    setError(null);
     try {
+      if (!ai.apiKey) {
+        throw new Error("AI service is not configured. Please add GEMINI_API_KEY to your environment variables in Netlify / Shared Settings.");
+      }
+
       const response = await ai.models.generateContent({
         model: MODELS.TEXT,
-        contents: `Provide dictionary data for the word "${query}". Include phonetic transcription (IPA), definition, and example sentence.`,
+        contents: `Provide dictionary data for the word "${query}". Include phonetic transcription (IPA), definition, and example sentence. Focus on standard educational English.`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -47,6 +53,7 @@ export default function Dictionary() {
       }
     } catch (err) {
       console.error(err);
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -83,6 +90,16 @@ export default function Dictionary() {
       </form>
 
       <AnimatePresence mode="wait">
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-6 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm flex gap-3 items-center"
+          >
+            <p>{error}</p>
+          </motion.div>
+        )}
+
         {result && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}

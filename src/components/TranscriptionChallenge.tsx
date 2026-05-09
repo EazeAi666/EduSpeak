@@ -23,6 +23,9 @@ export default function TranscriptionChallenge() {
     setFeedback(null);
     setUserAnswer('');
     try {
+      if (!ai.apiKey) {
+        throw new Error("AI Challenge generator is offline. Please check your API key.");
+      }
       const prompt = `As a phonetics expert, provide one English word and its phonetic transcription (IPA) for a spelling challenge. 
       The word should be relevant to education or general academic vocabulary.
       Return as JSON: { "transcription": string, "correctWord": string, "hint": string }`;
