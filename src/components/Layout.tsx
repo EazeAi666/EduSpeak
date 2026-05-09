@@ -28,9 +28,9 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
   ] as const;
 
   return (
-    <div className="min-h-screen bg-[#F5F2ED] text-[#1A1A1A] font-sans">
-      {/* Navigation Rail */}
-      <nav className="fixed left-0 top-0 h-full w-20 bg-white border-r border-[#1A1A1A]/10 flex flex-col items-center py-8 z-50">
+    <div className="min-h-screen bg-[#F5F2ED] text-[#1A1A1A] font-sans pb-20 md:pb-0">
+      {/* Desktop Navigation Rail */}
+      <nav className="hidden md:flex fixed left-0 top-0 h-full w-20 bg-white border-r border-[#1A1A1A]/10 flex-col items-center py-8 z-50">
         <div className="mb-12">
           <GraduationCap className="w-10 h-10 text-[#5A5A40]" />
         </div>
@@ -60,7 +60,13 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
               className="p-3 rounded-xl hover:bg-red-50 text-red-600 transition-colors"
               title="Sign Out"
             >
-              <img src={user.photoURL || ''} alt={user.displayName || ''} className="w-8 h-8 rounded-full border border-[#1A1A1A]/10" />
+              {user.photoURL ? (
+                <img src={user.photoURL} alt={user.displayName || ''} className="w-8 h-8 rounded-full border border-[#1A1A1A]/10" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#5A5A40] text-white flex items-center justify-center text-xs font-bold">
+                  {user.displayName?.[0] || 'U'}
+                </div>
+              )}
             </button>
           ) : (
             <button 
@@ -74,7 +80,43 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
         </div>
       </nav>
 
-      <main className="pl-20 min-h-screen">
+      {/* Mobile Header */}
+      <header className="md:hidden fixed top-0 w-full h-16 bg-white border-b border-[#1A1A1A]/10 px-6 flex items-center justify-between z-40">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="w-8 h-8 text-[#5A5A40]" />
+          <span className="font-serif font-bold text-lg">EduSpeak</span>
+        </div>
+        <div>
+          {user ? (
+            <button onClick={() => signOut()}>
+              <img src={user.photoURL || ''} alt="" className="w-8 h-8 rounded-full" />
+            </button>
+          ) : (
+            <button onClick={() => signIn()} className="text-[#5A5A40]">
+              <User className="w-6 h-6" />
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="md:hidden fixed bottom-0 w-full bg-white border-t border-[#1A1A1A]/10 px-2 py-3 flex justify-around items-center z-50">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setView(item.id as View)}
+            className={cn(
+              "flex flex-col items-center gap-1 transition-colors",
+              currentView === item.id ? "text-[#5A5A40]" : "text-[#1A1A1A]/40"
+            )}
+          >
+            <item.icon className="w-6 h-6" />
+            <span className="text-[10px] uppercase font-bold tracking-tighter">{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <main className="md:pl-20 pt-16 md:pt-0 min-h-screen">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentView}
