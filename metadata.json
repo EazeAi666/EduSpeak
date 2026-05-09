@@ -1,0 +1,6 @@
+{
+  "name": "EduSpeak: NCE English Hub",
+  "description": "Comprehensive English training portal for NCE students, featuring Professional English, Phonetics labs, Literature library, and AI pronunciation tools.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": []
+}

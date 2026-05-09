@@ -1,11 +1,24 @@
-<div align="center">
+# EduSpeak: NCE Training Hub
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+### Featured app created by Adesina Isreal x SWAL Organization
 
-  <h1>Built with AI Studio</h2>
+Comprehensive training portal for NCE students in Nigeria, specializing in **English (Phonetics, Literature, Professional Communication)** and **Social Studies**.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🚀 Features
+- **AI-Powered Professional Training**: Get custom study guides for English and Social Studies teaching pedagogy.
+- **Dynamic Assessments**: Test your knowledge with AI-generated professional proficiency quizzes.
+- **Phonetics Lab**: Interactive IPA chart with audio guides.
+- **Literature Library**: Selective Nigerian and Classic literature with analysis.
+- **Intelligent Dictionary**: AI-powered word discovery with phonetic transcriptions.
+- **PWA Ready**: Install this app on your mobile device or desktop for offline access.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 🛠️ Built With
+- React 18 + Vite
+- Gemini AI (Google Generative AI SDK)
+- Firebase (Auth & Firestore)
+- Tailwind CSS
+- Framer Motion (Animations)
+- Lucide React (Icons)
 
-</div>
+---
+© 2024 Adesina Isreal x SWAL Organization. Built to empower the next generation of educators.
