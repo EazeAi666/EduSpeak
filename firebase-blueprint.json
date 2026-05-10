@@ -26,6 +26,18 @@
         "savedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "type", "itemReference"]
+    },
+    "HistoryRecord": {
+      "title": "History Record",
+      "description": "Tracks all activities like searches, quiz scores, and practice sessions.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "activityType": { "type": "string", "enum": ["dictionary_search", "quiz_completion", "pronunciation_practice", "literature_read"] },
+        "content": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "activityType", "timestamp"]
     }
   },
   "firestore": {
@@ -36,6 +48,10 @@
     "users/{userId}/bookmarks/{bookmarkId}": {
       "schema": "Bookmark",
       "description": "User specific bookmarks."
+    },
+    "users/{userId}/history/{historyId}": {
+      "schema": "HistoryRecord",
+      "description": "Logs of user academic activities."
     }
   }
 }

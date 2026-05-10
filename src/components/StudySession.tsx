@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Loader2, ArrowLeft, Volume2, Play, Pause, Square, SkipForward } from 'lucide-react';
-import { ai, MODELS } from '../lib/gemini';
+import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import Markdown from 'react-markdown';
 
 interface StudySessionProps {
@@ -27,7 +27,7 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
   React.useEffect(() => {
     async function fetchContent() {
       try {
-        if (!ai.apiKey) {
+        if (!hasApiKey) {
           throw new Error("AI service is not configured. Please add GEMINI_API_KEY to environment variables.");
         }
 

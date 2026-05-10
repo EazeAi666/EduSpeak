@@ -4,8 +4,9 @@ import { BookMarked, ChevronRight, Hash, Quote, Library, Search, Loader2 } from 
 import { POEMS } from '../constants';
 import { Poem } from '../types';
 import { cn } from '../lib/utils';
-import { ai, MODELS } from '../lib/gemini';
+import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
+import { logActivity } from '../services/historyService';
 
 export default function Literature() {
   const [selected, setSelected] = React.useState<Poem | null>(null);
@@ -25,7 +26,7 @@ export default function Literature() {
     setSearching(true);
     setError(null);
     try {
-      if (!ai.apiKey) {
+      if (!hasApiKey) {
         throw new Error("AI Librarian is offline. Please configure your GEMINI_API_KEY.");
       }
       const prompt = `Find or provide a famous classic or Nigerian poem titled or by "${searchQuery}". 
@@ -59,6 +60,7 @@ export default function Literature() {
         };
         setSelected(newPoem);
         setSearchQuery('');
+        logActivity('literature_read', { title: newPoem.title, author: newPoem.author });
       }
     } catch (err) {
       console.error('Poem search error:', err);
@@ -81,7 +83,10 @@ export default function Literature() {
           {localFilteredPoems.map((poem) => (
             <button
               key={poem.id}
-              onClick={() => setSelected(poem)}
+              onClick={() => {
+                setSelected(poem);
+                logActivity('literature_read', { title: poem.title, author: poem.author });
+              }}
               className={cn(
                 "w-full text-left p-6 rounded-[2rem] transition-all duration-300 border",
                 selected?.id === poem.id 

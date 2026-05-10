@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Loader2, Play, Volume2, Bookmark, BookmarkCheck } from 'lucide-react';
-import { ai, MODELS } from '../lib/gemini';
+import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
+import { logActivity } from '../services/historyService';
 
 interface WordData {
   word: string;
@@ -18,20 +19,30 @@ export default function Dictionary() {
   const [result, setResult] = React.useState<WordData | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const searchTerm = query.trim();
+    if (!searchTerm) return;
 
+    performSearch(searchTerm);
+  };
+
+  const handleSearchDirectly = (word: string) => {
+    setQuery(word);
+    performSearch(word);
+  };
+
+  const performSearch = async (searchTerm: string) => {
     setLoading(true);
     setError(null);
     try {
-      if (!ai.apiKey) {
-        throw new Error("AI service is not configured. Please add GEMINI_API_KEY to your environment variables in Netlify / Shared Settings.");
+      if (!hasApiKey) {
+        throw new Error("AI service is not configured. Please add VITE_GEMINI_API_KEY to your environment variables in Netlify.");
       }
 
       const response = await ai.models.generateContent({
         model: MODELS.TEXT,
-        contents: `Provide dictionary data for the word "${query}". Include phonetic transcription (IPA), definition, and example sentence. Focus on standard educational English.`,
+        contents: `Provide dictionary data for the word "${searchTerm}". Include phonetic transcription (IPA), definition, and example sentence. Focus on standard educational English.`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -49,7 +60,9 @@ export default function Dictionary() {
       });
       
       if (response.text) {
-        setResult(JSON.parse(response.text));
+        const wordData = JSON.parse(response.text);
+        setResult(wordData);
+        logActivity('dictionary_search', { word: searchTerm, phonetic: wordData.phonetic });
       }
     } catch (err) {
       console.error(err);
@@ -162,10 +175,7 @@ export default function Dictionary() {
           {['Pedagogy', 'Linguistics', 'Curriculum', 'Phonology'].map(word => (
             <button 
               key={word}
-              onClick={() => {
-                setQuery(word);
-                // Trigger search manually would need a ref or state effect
-              }}
+              onClick={() => handleSearchDirectly(word)}
               className="p-4 bg-white rounded-2xl border border-[#1A1A1A]/5 text-left hover:border-[#5A5A40]/40 transition-colors group"
             >
               <div className="text-xs font-mono text-[#1A1A1A]/40 mb-1">Featured Word</div>

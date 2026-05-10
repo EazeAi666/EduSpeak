@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, ArrowLeft, CheckCircle2, XCircle, ChevronRight, Award } from 'lucide-react';
-import { ai, MODELS } from '../lib/gemini';
+import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { QuizQuestion } from '../types';
+import { logActivity } from '../services/historyService';
 
 interface QuizSessionProps {
   moduleTitle: string;
@@ -21,9 +22,15 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
   const [showResult, setShowResult] = React.useState(false);
 
   React.useEffect(() => {
+    if (showResult) {
+      logActivity('quiz_completion', { moduleTitle, department, score, totalQuestions: questions.length });
+    }
+  }, [showResult, questions.length, score, moduleTitle, department]);
+
+  React.useEffect(() => {
     async function fetchQuiz() {
       try {
-        if (!ai.apiKey) {
+        if (!hasApiKey) {
           throw new Error("AI Quiz generator is offline. Please check your API key.");
         }
         const prompt = `Generate 5 high-quality, professional multiple-choice questions for a professional teaching certification (NCE) based on the module: "${moduleTitle}" in the "${department}" department. 

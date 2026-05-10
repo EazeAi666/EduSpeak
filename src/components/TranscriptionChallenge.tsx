@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Loader2, Sparkles, CheckCircle, XCircle, Brain, RefreshCw } from 'lucide-react';
-import { ai, MODELS } from '../lib/gemini';
+import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { cn } from '../lib/utils';
 
@@ -23,7 +23,7 @@ export default function TranscriptionChallenge() {
     setFeedback(null);
     setUserAnswer('');
     try {
-      if (!ai.apiKey) {
+      if (!hasApiKey) {
         throw new Error("AI Challenge generator is offline. Please check your API key.");
       }
       const prompt = `As a phonetics expert, provide one English word and its phonetic transcription (IPA) for a spelling challenge. 

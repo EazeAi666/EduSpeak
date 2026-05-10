@@ -1,11 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Mic, Square, Loader2, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { Play, Mic, Square, Loader2, RefreshCw, CheckCircle, AlertCircle, Sparkles, Search } from 'lucide-react';
 import { PHONEMES } from '../constants';
 import { Phoneme } from '../types';
 import { cn } from '../lib/utils';
-import { ai, MODELS } from '../lib/gemini';
+import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import TranscriptionChallenge from '../components/TranscriptionChallenge';
+import { logActivity } from '../services/historyService';
 
 export default function Phonetics() {
   const [selected, setSelected] = React.useState<Phoneme | null>(null);
@@ -56,7 +57,7 @@ export default function Phonetics() {
 
     setIsAnalyzing(true);
     try {
-      if (!ai.apiKey) {
+      if (!hasApiKey) {
         throw new Error("AI Analysis requires an API key in environment variables.");
       }
       // Convert blob to base64
@@ -65,9 +66,12 @@ export default function Phonetics() {
       reader.onloadend = async () => {
         const base64Audio = (reader.result as string).split(',')[1];
 
-        const prompt = `You are a professional phonetics expert. Analyze the user's pronunciation of the sound /${selected.symbol}/ as in the word "${selected.example}".
-        Provide feedback in JSON format: { "score": number (0-100), "comment": string (concise advice for improvement) }. 
-        Focus on clarity, stress, and correct articulation of the specific phoneme.`;
+        const prompt = selected.symbol === '?' 
+          ? `Analyze the user's pronunciation of the word "${selected.example}". Compare it to standard Received Pronunciation (RP).
+             Provide feedback in JSON format: { "score": number (0-100), "comment": string (concise advice for improvement) }.`
+          : `You are a professional phonetics expert. Analyze the user's pronunciation of the sound /${selected.symbol}/ as in the word "${selected.example}".
+             Provide feedback in JSON format: { "score": number (0-100), "comment": string (concise advice for improvement) }. 
+             Focus on clarity, stress, and correct articulation of the specific phoneme.`;
 
         const result = await ai.models.generateContent({
           model: MODELS.TEXT, // Using text model for now, but in a real case we'd send the audio part
@@ -90,6 +94,11 @@ export default function Phonetics() {
         if (result.text) {
           const feedbackData = JSON.parse(result.text);
           setFeedback(feedbackData);
+          logActivity('pronunciation_practice', { 
+            phoneme: selected.symbol, 
+            word: selected.example, 
+            score: feedbackData.score 
+          });
         }
       };
     } catch (err) {
@@ -241,6 +250,110 @@ export default function Phonetics() {
         <PhonemeGrid title="Diphthongs (Gliding Vowels)" items={diphthongs} />
         <PhonemeGrid title="Consonants (Selection)" items={consonants} />
       </div>
+
+      <section className="mt-12 bg-white rounded-[3rem] border border-[#5A5A40]/10 p-10 space-y-8 shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+          <div className="space-y-2 max-w-xl">
+            <h2 className="text-3xl font-serif">Advanced Pronunciation Coach</h2>
+            <p className="text-[#1A1A1A]/60 italic font-medium">Practice any word from the NCE curriculum. Record yourself and receive a detailed phonetic analysis compared to the standard Received Pronunciation (RP).</p>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#5A5A40]/10 text-[#5A5A40] rounded-full text-xs font-mono tracking-widest uppercase">
+            <Sparkles className="w-4 h-4" /> AI Powered
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-widest font-bold text-[#1A1A1A]/40">Input Target Word</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="e.g. Pedagogy, Curriculum..."
+                  className="flex-1 bg-[#F5F2ED] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 ring-[#5A5A40]/20 font-medium transition-all"
+                  id="custom-word-input"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = (e.currentTarget as HTMLInputElement).value;
+                      if (val) {
+                        setSelected({
+                          symbol: '?',
+                          example: val,
+                          description: `Practicing custom word: ${val}`,
+                          type: 'vowel' // dummy
+                        });
+                        speak(val);
+                      }
+                    }
+                  }}
+                />
+                <button 
+                  onClick={() => {
+                    const el = document.getElementById('custom-word-input') as HTMLInputElement;
+                    if (el.value) {
+                      setSelected({
+                        symbol: '?',
+                        example: el.value,
+                        description: `Practicing custom word: ${el.value}`,
+                        type: 'vowel'
+                      });
+                      speak(el.value);
+                    }
+                  }}
+                  className="p-3 bg-[#5A5A40] text-white rounded-xl shadow-lg hover:brightness-110 transition-all"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 bg-[#F5F2ED] rounded-2xl border border-[#1A1A1A]/5 space-y-4">
+              <p className="text-sm text-[#1A1A1A]/60 italic">"Recording your voice helps you identify 'phonetic shifts' where your native tongue might influence your English delivery. This is crucial for professional teachers."</p>
+              <div className="flex flex-wrap gap-2">
+                {['Assessment', 'Instruction', 'Cognitive', 'Scaffolding', 'Linguistics'].map(w => (
+                  <button 
+                    key={w}
+                    onClick={() => {
+                      setSelected({ 
+                        symbol: '?', 
+                        example: w, 
+                        description: `Practicing curriculum term: ${w}`,
+                        type: 'vowel'
+                      });
+                      speak(w);
+                      const el = document.getElementById('custom-word-input') as HTMLInputElement;
+                      if (el) el.value = w;
+                    }}
+                    className="px-3 py-1 bg-white border border-[#1A1A1A]/10 rounded-full text-xs hover:border-[#5A5A40] transition-colors"
+                  >
+                    {w}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#1A1A1A] rounded-[2rem] p-8 text-white relative overflow-hidden flex flex-col justify-center items-center text-center space-y-6">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#5A5A40] via-transparent to-transparent" />
+            </div>
+            
+            <div className="relative z-10 w-full space-y-6">
+              <h4 className="text-lg font-serif">Quick Instructions</h4>
+              <ul className="text-sm text-white/60 space-y-3">
+                <li>1. Choose or type a word to practice</li>
+                <li>2. Listen to the standard pronunciation</li>
+                <li>3. Record yourself clearly</li>
+                <li>4. Compare and get AI score</li>
+              </ul>
+              
+              <div className="pt-4">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#5A5A40] font-bold">Standard: Received Pronunciation</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="mt-12 p-8 bg-white rounded-3xl border border-[#1A1A1A]/5">
         <h3 className="text-xl font-serif mb-4">Common Classroom Terms</h3>
