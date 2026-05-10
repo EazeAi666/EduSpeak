@@ -1,18 +1,53 @@
 import React from 'react';
 import { auth, signIn } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { GraduationCap, LogIn, Loader2 } from 'lucide-react';
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    return onAuthStateChanged(auth, (u) => {
+    return onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setLoading(false);
+      
+      if (u) {
+        // Initialize user profile
+        try {
+          const userRef = doc(db, 'users', u.uid);
+          await setDoc(userRef, {
+            uid: u.uid,
+            email: u.email,
+            lastActive: new Date().toISOString()
+          }, { merge: true });
+        } catch (err) {
+          console.error('Failed to initialize user profile:', err);
+        }
+      }
     });
   }, []);
+
+  const handleSignIn = async () => {
+    setError(null);
+    try {
+      await signIn();
+    } catch (err) {
+      console.error('Sign in error:', err);
+      if (err instanceof Error) {
+        if (err.message.includes('auth/popup-blocked')) {
+          setError('Sign-in popup was blocked by your browser. Please allow popups for this site.');
+        } else if (err.message.includes('auth/unauthorized-domain')) {
+          setError('This domain is not authorized for Google Sign-in. Please add it to your Firebase authorized domains.');
+        } else {
+          setError('Failed to sign in. Please try again.');
+        }
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -36,8 +71,15 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
             <h1 className="text-3xl font-serif">Welcome to EduSpeak</h1>
             <p className="text-[#1A1A1A]/60">Access Nigeria's professional teaching certification curriculum and interactive phonetics training.</p>
           </div>
+
+          {error && (
+            <div className="p-4 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 italic">
+              {error}
+            </div>
+          )}
+
           <button 
-            onClick={() => signIn()}
+            onClick={handleSignIn}
             className="w-full py-4 bg-[#5A5A40] text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:brightness-110 transition-all shadow-lg active:scale-95"
           >
             <LogIn className="w-5 h-5" /> Continue with Google

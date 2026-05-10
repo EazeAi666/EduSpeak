@@ -1,9 +1,10 @@
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
-import { db, auth } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 
 export async function logActivity(type: 'dictionary_search' | 'quiz_completion' | 'pronunciation_practice' | 'literature_read', content: any) {
   if (!auth.currentUser) return;
 
+  const historyPath = `users/${auth.currentUser.uid}/history`;
   try {
     const historyRef = collection(db, 'users', auth.currentUser.uid, 'history');
     await addDoc(historyRef, {
@@ -12,7 +13,12 @@ export async function logActivity(type: 'dictionary_search' | 'quiz_completion' 
       content,
       timestamp: new Date().toISOString()
     });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, historyPath);
+  }
 
+  const userPath = `users/${auth.currentUser.uid}`;
+  try {
     // Also update user profile lastActive
     const userRef = doc(db, 'users', auth.currentUser.uid);
     await setDoc(userRef, { 
@@ -20,8 +26,7 @@ export async function logActivity(type: 'dictionary_search' | 'quiz_completion' 
       email: auth.currentUser.email,
       lastActive: new Date().toISOString() 
     }, { merge: true });
-    
   } catch (error) {
-    console.error('Failed to log activity:', error);
+    handleFirestoreError(error, OperationType.WRITE, userPath);
   }
 }
