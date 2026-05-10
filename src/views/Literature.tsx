@@ -1,18 +1,53 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookMarked, ChevronRight, Hash, Quote, Library, Search, Loader2 } from 'lucide-react';
+import { BookMarked, ChevronRight, Hash, Quote, Library, Search, Loader2, Heart, HeartOff } from 'lucide-react';
 import { POEMS } from '../constants';
 import { Poem } from '../types';
 import { cn } from '../lib/utils';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { logActivity } from '../services/historyService';
+import { db, auth } from '../lib/firebase';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 
 export default function Literature() {
   const [selected, setSelected] = React.useState<Poem | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searching, setSearching] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [savedPoemIds, setSavedPoemIds] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    if (!auth.currentUser) return;
+    const userRef = doc(db, 'users', auth.currentUser.uid);
+    return onSnapshot(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setSavedPoemIds(snapshot.data().savedPoems || []);
+      }
+    });
+  }, []);
+
+  const toggleSave = async (poem: Poem) => {
+    if (!auth.currentUser) return;
+    const userRef = doc(db, 'users', auth.currentUser.uid);
+    const isSaved = savedPoemIds.includes(poem.id.toString());
+
+    try {
+      if (isSaved) {
+        await updateDoc(userRef, {
+          savedPoems: arrayRemove(poem.id.toString())
+        });
+      } else {
+        await updateDoc(userRef, {
+          savedPoems: arrayUnion(poem.id.toString())
+        });
+      }
+    } catch (err) {
+      console.error('Save toggle error:', err);
+    }
+  };
+
+  const savedPoems = POEMS.filter(p => savedPoemIds.includes(p.id.toString()));
 
   const localFilteredPoems = POEMS.filter(p => 
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -80,7 +115,36 @@ export default function Literature() {
         </header>
 
         <div className="space-y-3">
-          {localFilteredPoems.map((poem) => (
+          {savedPoems.length > 0 && (
+            <div className="pb-4 space-y-3">
+              <h4 className="text-xs font-mono uppercase tracking-widest text-[#5A5A40] pl-2 border-l-2 border-[#5A5A40]">Saved Gallery</h4>
+              {savedPoems.map((poem) => (
+                <button
+                  key={poem.id}
+                  onClick={() => {
+                    setSelected(poem);
+                    logActivity('literature_read', { title: poem.title, author: poem.author });
+                  }}
+                  className={cn(
+                    "w-full text-left p-4 rounded-2xl transition-all duration-300 border",
+                    selected?.id === poem.id 
+                      ? "bg-[#5A5A40] text-white border-transparent shadow-lg" 
+                      : "bg-white border-[#1A1A1A]/5 hover:bg-[#5A5A40]/5"
+                  )}
+                >
+                  <h3 className="text-sm font-bold truncate">{poem.title}</h3>
+                  <p className={cn("text-[10px] truncate", 
+                    selected?.id === poem.id ? "text-white/70" : "text-[#1A1A1A]/40"
+                  )}>
+                    {poem.author}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <h4 className="text-xs font-mono uppercase tracking-widest text-[#1A1A1A]/40 pl-2 border-l-2 border-[#1A1A1A]/10">Browse Classics</h4>
+          {localFilteredPoems.filter(p => !savedPoemIds.includes(p.id.toString())).map((poem) => (
             <button
               key={poem.id}
               onClick={() => {
@@ -168,9 +232,22 @@ export default function Literature() {
                 </div>
                 <h2 className="text-6xl font-serif font-medium leading-tight">{selected.title}</h2>
               </div>
-              <button className="p-4 bg-[#F5F2ED] text-[#1A1A1A] rounded-2xl hover:bg-[#5A5A40] hover:text-white transition-all">
-                <BookMarked className="w-6 h-6" />
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => toggleSave(selected)}
+                  className={cn(
+                    "p-4 rounded-2xl transition-all shadow-sm",
+                    savedPoemIds.includes(selected.id.toString())
+                      ? "bg-red-50 text-red-500 hover:bg-red-100"
+                      : "bg-[#F5F2ED] text-[#1A1A1A] hover:bg-[#5A5A40] hover:text-white"
+                  )}
+                >
+                  {savedPoemIds.includes(selected.id.toString()) ? <HeartOff className="w-6 h-6" /> : <Heart className="w-6 h-6" />}
+                </button>
+                <button className="p-4 bg-[#F5F2ED] text-[#1A1A1A] rounded-2xl hover:bg-[#5A5A40] hover:text-white transition-all shadow-sm">
+                  <BookMarked className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12">

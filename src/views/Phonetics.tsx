@@ -52,6 +52,14 @@ export default function Phonetics() {
     }
   };
 
+  const playRecording = () => {
+    if (audioBlob) {
+      const url = URL.createObjectURL(audioBlob);
+      const audio = new Audio(url);
+      audio.play();
+    }
+  };
+
   const analyzePronunciation = async () => {
     if (!audioBlob || !selected) return;
 
@@ -195,21 +203,29 @@ export default function Phonetics() {
                   )}
 
                   {audioBlob && !isRecording && (
-                    <button 
-                      onClick={analyzePronunciation}
-                      disabled={isAnalyzing}
-                      className="w-full sm:w-auto px-6 py-3 bg-[#5A5A40] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50 shadow-sm"
-                    >
-                      {isAnalyzing ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" /> Analyzing...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="w-5 h-5" /> Get AI Feedback
-                        </>
-                      )}
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                      <button 
+                        onClick={playRecording}
+                        className="w-full sm:w-auto px-6 py-3 bg-white border border-[#5A5A40]/20 text-[#5A5A40] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#5A5A40]/5 transition-all shadow-sm"
+                      >
+                        <Play className="w-5 h-5" /> Review Recording
+                      </button>
+                      <button 
+                        onClick={analyzePronunciation}
+                        disabled={isAnalyzing}
+                        className="w-full sm:w-auto px-6 py-3 bg-[#5A5A40] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50 shadow-sm"
+                      >
+                        {isAnalyzing ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" /> Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="w-5 h-5" /> Get AI Feedback
+                          </>
+                        )}
+                      </button>
+                    </div>
                   )}
                 </div>
 
