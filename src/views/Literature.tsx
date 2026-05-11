@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookMarked, ChevronRight, Hash, Quote, Library, Search, Loader2, Heart, HeartOff } from 'lucide-react';
+import { BookMarked, ChevronRight, Hash, Quote, Library, Search, Loader2, Heart, HeartOff, Volume2, Square, Globe } from 'lucide-react';
 import { POEMS } from '../constants';
 import { Poem } from '../types';
 import { cn } from '../lib/utils';
@@ -21,6 +21,43 @@ export default function Literature() {
   const [searching, setSearching] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [savedPoemIds, setSavedPoemIds] = React.useState<string[]>([]);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [accent, setAccent] = React.useState<'en-GB' | 'en-US'>('en-GB');
+
+  React.useEffect(() => {
+    // Cleanup speech on unmount
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const handleSpeech = () => {
+    if (!selected) return;
+
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(selected.content);
+    utterance.lang = accent;
+    utterance.rate = 0.9; // Slightly slower for better clarity
+    utterance.pitch = 1;
+
+    // Try to find a voice that matches the selected accent if possible
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(v => v.lang.startsWith(accent));
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => setIsPlaying(false);
+
+    window.speechSynthesis.speak(utterance);
+  };
 
   React.useEffect(() => {
     localStorage.setItem('eduspeak_fetched_poetry', JSON.stringify(fetchedPoetry));
@@ -312,6 +349,46 @@ export default function Literature() {
                 <h2 className="text-6xl font-serif font-medium leading-tight">{selected.title}</h2>
               </div>
               <div className="flex gap-2">
+                <div className="flex items-center bg-[#F5F2ED] rounded-2xl p-1 gap-1 border border-[#1A1A1A]/5 shadow-sm">
+                  <button 
+                    onClick={() => {
+                      window.speechSynthesis.cancel();
+                      setIsPlaying(false);
+                      setAccent('en-GB');
+                    }}
+                    className={cn(
+                      "px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-widest transition-all",
+                      accent === 'en-GB' ? "bg-[#5A5A40] text-white shadow-md" : "text-[#1A1A1A]/40 hover:text-[#1A1A1A]"
+                    )}
+                  >
+                    UK
+                  </button>
+                  <button 
+                    onClick={() => {
+                      window.speechSynthesis.cancel();
+                      setIsPlaying(false);
+                      setAccent('en-US');
+                    }}
+                    className={cn(
+                      "px-3 py-2 rounded-xl text-[10px] font-mono uppercase tracking-widest transition-all",
+                      accent === 'en-US' ? "bg-[#5A5A40] text-white shadow-md" : "text-[#1A1A1A]/40 hover:text-[#1A1A1A]"
+                    )}
+                  >
+                    US
+                  </button>
+                </div>
+                <button 
+                  onClick={handleSpeech}
+                  className={cn(
+                    "p-4 rounded-2xl transition-all shadow-sm flex items-center justify-center min-w-[56px]",
+                    isPlaying 
+                      ? "bg-red-50 text-red-500 hover:bg-red-100" 
+                      : "bg-[#5A5A40] text-white hover:bg-[#4A4A30]"
+                  )}
+                  title={isPlaying ? "Stop Reading" : "Read Aloud"}
+                >
+                  {isPlaying ? <Square className="w-6 h-6 fill-current" /> : <Volume2 className="w-6 h-6" />}
+                </button>
                 <button 
                   onClick={() => toggleSave(selected)}
                   className={cn(
