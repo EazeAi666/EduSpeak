@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Book, Download, GraduationCap, Languages, Library, Search, User, Sparkles } from 'lucide-react';
-import { View } from '../types';
+import { Book, Download, GraduationCap, Languages, Library, Search, User, Sparkles, Globe } from 'lucide-react';
+import { View, Accent } from '../types';
 import { cn } from '../lib/utils';
 import { auth, signIn, signOut } from '../lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getPreferredAccent, setPreferredAccent } from '../services/settingsService';
 
 interface LayoutProps {
   currentView: View;
@@ -16,10 +17,17 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
   const [user, setUser] = React.useState<FirebaseUser | null>(null);
   const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
   const [isInstallable, setIsInstallable] = React.useState(false);
+  const [accent, setAccent] = React.useState<Accent>(getPreferredAccent());
 
   React.useEffect(() => {
     return onAuthStateChanged(auth, (u) => setUser(u));
   }, []);
+
+  const handleAccentToggle = () => {
+    const newAccent = accent === 'en-GB' ? 'en-US' : 'en-GB';
+    setAccent(newAccent);
+    setPreferredAccent(newAccent);
+  };
 
   React.useEffect(() => {
     const handler = (e: any) => {
@@ -78,6 +86,20 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
         </div>
 
         <div className="mt-auto space-y-6 flex flex-col items-center">
+          <button 
+            onClick={handleAccentToggle}
+            className="group relative p-3 rounded-xl bg-[#5A5A40]/5 text-[#5A5A40] hover:bg-[#5A5A40] hover:text-white transition-all overflow-hidden"
+            title={`Current Accent: ${accent === 'en-GB' ? 'British' : 'American'}`}
+          >
+            <div className="flex flex-col items-center gap-0.5">
+              <Globe className="w-5 h-5" />
+              <span className="text-[8px] font-bold uppercase">{accent.split('-')[1]}</span>
+            </div>
+            <span className="absolute left-full ml-4 px-2 py-1 bg-[#1A1A1A] text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Switch to {accent === 'en-GB' ? 'American' : 'British'} English
+            </span>
+          </button>
+
           {isInstallable && (
             <button 
               onClick={handleInstall}
@@ -121,6 +143,12 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
           <span className="font-serif font-bold text-lg">EduSpeak</span>
         </div>
         <div className="flex items-center gap-4">
+          <button 
+            onClick={handleAccentToggle}
+            className="p-2 rounded-lg bg-[#5A5A40]/10 text-[#5A5A40] text-[10px] font-bold flex items-center gap-1"
+          >
+             <Globe className="w-3 h-3" /> {accent.split('-')[1]}
+          </button>
           {isInstallable && (
             <button onClick={handleInstall} className="text-[#5A5A40]">
               <Download className="w-6 h-6" />

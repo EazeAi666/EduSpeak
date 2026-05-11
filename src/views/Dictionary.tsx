@@ -6,6 +6,7 @@ import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { logActivity } from '../services/historyService';
 import { toggleBookmark, isBookmarked, subscribeToBookmarks, Bookmark as BookmarkType } from '../services/bookmarkService';
+import { getPreferredAccent } from '../services/settingsService';
 
 interface WordData {
   word: string;
@@ -98,7 +99,7 @@ export default function Dictionary() {
 
   const speak = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-GB';
+    utterance.lang = getPreferredAccent();
     window.speechSynthesis.speak(utterance);
   };
 

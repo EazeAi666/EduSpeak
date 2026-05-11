@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Volume2, Bookmark, BookmarkCheck, CheckCircle, ArrowRight, RefreshCw, Loader2, BookOpen, History as HistoryIcon } from 'lucide-react';
 import { logActivity } from '../services/historyService';
 import { toggleBookmark, isBookmarked } from '../services/bookmarkService';
+import { getPreferredAccent } from '../services/settingsService';
 import { cn } from '../lib/utils';
 
 interface Word {
@@ -115,7 +116,7 @@ export default function Discover() {
 
   const speak = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-GB';
+    utterance.lang = getPreferredAccent();
     window.speechSynthesis.speak(utterance);
   };
 

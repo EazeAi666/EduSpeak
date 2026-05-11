@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import TranscriptionChallenge from '../components/TranscriptionChallenge';
 import { logActivity } from '../services/historyService';
+import { getPreferredAccent } from '../services/settingsService';
 import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 
@@ -43,7 +44,7 @@ export default function Phonetics() {
 
   const speak = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-GB';
+    utterance.lang = getPreferredAccent();
     utterance.rate = 0.8;
     window.speechSynthesis.speak(utterance);
   };
