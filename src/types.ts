@@ -1,4 +1,4 @@
-export type View = 'home' | 'phonetics' | 'literature' | 'dictionary' | 'training';
+export type View = 'home' | 'phonetics' | 'literature' | 'dictionary' | 'training' | 'discover';
 export type Department = 'english' | 'social-studies';
 
 export interface Poem {

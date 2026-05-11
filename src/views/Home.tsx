@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History } from 'lucide-react';
+import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles } from 'lucide-react';
 import { View } from '../types';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
@@ -55,6 +55,13 @@ export default function Home({ setView }: HomeProps) {
       icon: Search,
       color: 'bg-purple-50 text-purple-600',
     },
+      {
+        id: 'discover',
+        title: 'Word Discovery',
+        description: 'Explore curated academic and professional words to enhance your teaching vocabulary.',
+        icon: Sparkles,
+        color: 'bg-amber-50 text-amber-600',
+      },
   ] as const;
 
   return (
@@ -112,6 +119,7 @@ export default function Home({ setView }: HomeProps) {
                         {item.activityType === 'pronunciation_practice' && `Practiced sound /${item.content?.phoneme}/`}
                         {item.activityType === 'literature_read' && `Read "${item.content?.title}"`}
                         {item.activityType === 'user_login' && `Signed in to portal`}
+                        {item.activityType === 'word_discovery' && `Mastered word "${item.content?.word}"`}
                       </p>
                       <div className="flex items-center gap-2 mt-1 text-[10px] text-[#1A1A1A]/40 uppercase tracking-widest">
                         <Clock className="w-3 h-3" />

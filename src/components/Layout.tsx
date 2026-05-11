@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Book, Download, GraduationCap, Languages, Library, Search, User } from 'lucide-react';
+import { Book, Download, GraduationCap, Languages, Library, Search, User, Sparkles } from 'lucide-react';
 import { View } from '../types';
 import { cn } from '../lib/utils';
 import { auth, signIn, signOut } from '../lib/firebase';
@@ -47,6 +47,7 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
     { id: 'training', label: 'Training', icon: Book },
     { id: 'phonetics', label: 'Phonetics', icon: Languages },
     { id: 'literature', label: 'Literature', icon: Library },
+    { id: 'discover', label: 'Discover', icon: Sparkles },
     { id: 'dictionary', label: 'Dictionary', icon: Search },
   ] as const;
 

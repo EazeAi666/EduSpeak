@@ -54,7 +54,7 @@ service cloud.firestore {
       function isValidHistory(data) {
         return data.keys().hasAll(['userId', 'activityType', 'timestamp']) &&
                data.userId == request.auth.uid &&
-               data.activityType in ["dictionary_search", "quiz_completion", "pronunciation_practice", "literature_read", "user_login"] &&
+               data.activityType in ["dictionary_search", "quiz_completion", "pronunciation_practice", "literature_read", "user_login", "word_discovery"] &&
                data.timestamp is string;
       }
 

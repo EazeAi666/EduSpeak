@@ -1,7 +1,7 @@
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 
-export async function logActivity(type: 'dictionary_search' | 'quiz_completion' | 'pronunciation_practice' | 'literature_read' | 'user_login', content: any) {
+export async function logActivity(type: 'dictionary_search' | 'quiz_completion' | 'pronunciation_practice' | 'literature_read' | 'user_login' | 'word_discovery', content: any) {
   if (!auth.currentUser) return;
 
   const historyPath = `users/${auth.currentUser.uid}/history`;

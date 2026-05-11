@@ -33,7 +33,7 @@
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
-        "activityType": { "type": "string", "enum": ["dictionary_search", "quiz_completion", "pronunciation_practice", "literature_read", "user_login"] },
+        "activityType": { "type": "string", "enum": ["dictionary_search", "quiz_completion", "pronunciation_practice", "literature_read", "user_login", "word_discovery"] },
         "content": { "type": "object" },
         "timestamp": { "type": "string", "format": "date-time" }
       },
