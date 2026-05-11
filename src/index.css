@@ -10,6 +10,18 @@
 @layer base {
   body {
     @apply bg-[#F5F2ED] text-[#1A1A1A] antialiased selection:bg-[#5A5A40]/30;
+    /* Respect mobile notches and safe areas */
+    padding-bottom: env(safe-area-inset-bottom);
+    min-height: -webkit-fill-available;
+  }
+
+  html {
+    /* Disable blue tap highlight on mobile */
+    -webkit-tap-highlight-color: transparent;
+    /* Fluid height for mobile browsers */
+    height: -webkit-fill-available;
+    /* Prevent accidental refresh on pull-down for core UI if desired */
+    /* touch-action: pan-x pan-y; */
   }
 }
 
