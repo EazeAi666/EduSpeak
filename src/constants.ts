@@ -170,6 +170,13 @@ export const TRAINING_MODULES: Module[] = [
     topics: ['Writing Behavioral Objectives', 'Steps in Lesson Note Preparation', 'The Hook: Introduction Strategies', 'Assessment and Evaluation in Class', 'Self-Reflective Teaching']
   },
   {
+    id: 'edu-academic-1',
+    title: 'Academic Writing',
+    department: 'english',
+    description: 'Mastering the art of formal writing for tertiary education.',
+    topics: ['Essay Structure: Introduction, Body, Conclusion', 'Referencing and Citations (APA)', 'Avoiding Plagiarism', 'Logical Argumentation', 'Thesis Statement Development']
+  },
+  {
     id: 'ss-gov-1',
     title: 'Elements of Government',
     department: 'social-studies',
