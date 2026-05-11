@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Mic, Square, Loader2, RefreshCw, CheckCircle, AlertCircle, Sparkles, Search, History, Clock, Trophy } from 'lucide-react';
-import { PHONEMES } from '../constants';
+import { PHONEMES, PRACTICE_WORDS } from '../constants';
 import { Phoneme } from '../types';
 import { cn } from '../lib/utils';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
@@ -18,8 +18,15 @@ export default function Phonetics() {
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [feedback, setFeedback] = React.useState<{ score: number; comment: string } | null>(null);
   const [practiceHistory, setPracticeHistory] = React.useState<any[]>([]);
+  const [suggestedWords, setSuggestedWords] = React.useState<string[]>([]);
+  const [classroomTerms, setClassroomTerms] = React.useState<string[]>([]);
 
   React.useEffect(() => {
+    // Randomize words on mount
+    const shuffled = [...PRACTICE_WORDS].sort(() => 0.5 - Math.random());
+    setSuggestedWords(shuffled.slice(0, 5));
+    setClassroomTerms(shuffled.slice(5, 11));
+
     if (!auth.currentUser) return;
     const q = query(
       collection(db, 'users', auth.currentUser.uid, 'history'),
@@ -344,7 +351,7 @@ export default function Phonetics() {
             <div className="p-6 bg-[#F5F2ED] rounded-2xl border border-[#1A1A1A]/5 space-y-4">
               <p className="text-sm text-[#1A1A1A]/60 italic">"Recording your voice helps you identify 'phonetic shifts' where your native tongue might influence your English delivery. This is crucial for professional teachers."</p>
               <div className="flex flex-wrap gap-2">
-                {['Assessment', 'Instruction', 'Cognitive', 'Scaffolding', 'Linguistics'].map(w => (
+                {suggestedWords.map(w => (
                   <button 
                     key={w}
                     onClick={() => {
@@ -392,7 +399,7 @@ export default function Phonetics() {
       <div className="mt-12 p-8 bg-white rounded-3xl border border-[#1A1A1A]/5">
         <h3 className="text-xl font-serif mb-4">Common Classroom Terms</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {['Curriculum', 'Pedagogy', 'Linguistics', 'Education', 'Assessment'].map(word => (
+          {classroomTerms.map(word => (
             <div key={word} className="p-4 bg-[#F5F2ED] rounded-xl flex justify-between items-center group">
               <span className="font-medium">{word}</span>
               <button 

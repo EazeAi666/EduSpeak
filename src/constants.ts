@@ -268,3 +268,15 @@ export const TRAINING_MODULES: Module[] = [
     topics: ['Corruption and Integrity', 'Gender Equality', 'Poverty Alleviation', 'Drug Abuse and HIV/AIDS', 'Population Education']
   }
 ];
+
+export const PRACTICE_WORDS: string[] = [
+  'Pedagogy', 'Curriculum', 'Assessment', 'Instruction', 'Cognitive', 
+  'Scaffolding', 'Linguistics', 'Education', 'Evaluation', 'Methodology',
+  'Acoustics', 'Articulate', 'Clarity', 'Confidence', 'Delivery',
+  'Enunciation', 'Feedback', 'Fluency', 'Interaction', 'Intonation',
+  'Lecturing', 'Literacy', 'Mastery', 'Motivation', 'Pronunciation',
+  'Resonance', 'Rhythm', 'Syllable', 'Terminology', 'Transcription',
+  'Vocabulary', 'Workshop', 'Engagement', 'Facilitation', 'Objective',
+  'Synchronous', 'Asynchronous', 'Formative', 'Summative', 'Portfolio',
+  'Didactic', 'Heuristic', 'Pragmatic', 'Rhetoric', 'Eloquence'
+];
