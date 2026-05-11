@@ -1,5 +1,5 @@
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType, serverTimestamp } from '../lib/firebase';
 
 export async function logActivity(type: 'dictionary_search' | 'quiz_completion' | 'pronunciation_practice' | 'literature_read' | 'user_login' | 'word_discovery', content: any) {
   if (!auth.currentUser) return;
@@ -11,7 +11,7 @@ export async function logActivity(type: 'dictionary_search' | 'quiz_completion' 
       userId: auth.currentUser.uid,
       activityType: type,
       content,
-      timestamp: new Date().toISOString()
+      timestamp: serverTimestamp()
     });
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, historyPath);
@@ -24,7 +24,7 @@ export async function logActivity(type: 'dictionary_search' | 'quiz_completion' 
     await setDoc(userRef, { 
       uid: auth.currentUser.uid,
       email: auth.currentUser.email,
-      lastActive: new Date().toISOString() 
+      lastActive: serverTimestamp() 
     }, { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, userPath);

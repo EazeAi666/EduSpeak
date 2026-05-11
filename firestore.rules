@@ -32,6 +32,7 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidUser(request.resource.data);
       allow update: if isOwner(userId) && 
                       isValidUser(request.resource.data) &&
+                      request.resource.data.lastActive == request.time &&
                       request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName', 'currentModule', 'completedModules', 'savedPoems', 'lastActive', 'streak', 'bestStreak', 'streakLastUpdated', 'points', 'level']);
     }
 
@@ -45,7 +46,7 @@ service cloud.firestore {
       }
 
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidBookmark(request.resource.data);
+      allow create: if isOwner(userId) && isValidBookmark(request.resource.data) && request.resource.data.userId == request.auth.uid;
       allow delete: if isOwner(userId);
     }
 
@@ -59,7 +60,7 @@ service cloud.firestore {
       }
 
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidHistory(request.resource.data);
+      allow create: if isOwner(userId) && isValidHistory(request.resource.data) && request.resource.data.timestamp == request.time;
     }
   }
 }

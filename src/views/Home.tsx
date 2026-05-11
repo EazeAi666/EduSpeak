@@ -178,7 +178,11 @@ export default function Home({ setView }: HomeProps) {
                       </p>
                       <div className="flex items-center gap-2 mt-1 text-[10px] text-[#1A1A1A]/40 uppercase tracking-widest">
                         <Clock className="w-3 h-3" />
-                        {new Date(item.timestamp).toLocaleDateString()}
+                        {(() => {
+                          if (!item.timestamp) return '';
+                          const date = item.timestamp.toDate ? item.timestamp.toDate() : new Date(item.timestamp);
+                          return date.toLocaleDateString();
+                        })()}
                       </div>
                     </div>
                   </div>

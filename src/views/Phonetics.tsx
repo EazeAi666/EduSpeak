@@ -465,7 +465,11 @@ export default function Phonetics() {
                       <h4 className="font-bold text-[#1A1A1A] capitalize">{session.content?.word}</h4>
                       <div className="flex items-center gap-1 text-[10px] text-[#1A1A1A]/40 uppercase tracking-tighter">
                         <Clock className="w-3 h-3" />
-                        {new Date(session.timestamp).toLocaleDateString()}
+                        {(() => {
+                          if (!session.timestamp) return '';
+                          const date = session.timestamp.toDate ? session.timestamp.toDate() : new Date(session.timestamp);
+                          return date.toLocaleDateString();
+                        })()}
                       </div>
                     </div>
                   </div>

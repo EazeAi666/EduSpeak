@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
-import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore, enableMultiTabIndexedDbPersistence, doc, getDocFromServer, serverTimestamp } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
@@ -18,8 +18,21 @@ if (typeof window !== 'undefined') {
       console.warn('Firestore persistence failed: Browser not supported');
     }
   });
+
+  // Test connection
+  const testConnection = async () => {
+    try {
+      await getDocFromServer(doc(db, 'test', 'connection'));
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('offline')) {
+        console.error("Please check your Firebase configuration or internet connection.");
+      }
+    }
+  };
+  testConnection();
 }
 
+export { serverTimestamp };
 export const googleProvider = new GoogleAuthProvider();
 
 export enum OperationType {
