@@ -92,7 +92,7 @@ As it falls on our thatch?
 Drip-drop-drip-drop-drip...
 We can see the stars?
 The floor is wet and slippery
-Yet we sleep and dream.`,
+Yet we sleep and dream...`,
     analysis: 'A vivid portrayal of a rainy night in a rural Nigerian setting, focusing on nature and family.'
   },
   {
@@ -118,7 +118,7 @@ are like the wrinkles on the face of an old woman,
 and the stars are like
 the eyes of the children
 watching the canoe slide
-past the mangrove roots.`,
+past the mangrove roots...`,
     analysis: 'Explores the transition between old and new, tradition and change through the lens of a fisherman.'
   },
   {

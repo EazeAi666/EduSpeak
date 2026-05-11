@@ -13,6 +13,7 @@ import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'fir
 
 export default function Literature() {
   const [selected, setSelected] = React.useState<Poem | null>(null);
+  const [fetchedPoetry, setFetchedPoetry] = React.useState<Record<string, Poem>>({});
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searching, setSearching] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -27,6 +28,65 @@ export default function Literature() {
       }
     });
   }, []);
+
+  const handleSelectPoem = async (poem: Poem) => {
+    // Check cache first
+    if (fetchedPoetry[poem.id]) {
+      setSelected(fetchedPoetry[poem.id]);
+      return;
+    }
+
+    if (poem.content.includes('...') && hasApiKey) {
+      setSearching(true);
+      setError(null);
+      try {
+        const prompt = `Provide the UNABRIDGED full text and an in-depth literary analysis for the poem "${poem.title}" by ${poem.author}. 
+        Focus on the version often taught in Nigerian schools or global literature curricula.
+        Return it in JSON format with fields: title, author, content, analysis.`;
+
+        const result = await ai.models.generateContent({
+          model: MODELS.TEXT,
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                author: { type: Type.STRING },
+                content: { type: Type.STRING },
+                analysis: { type: Type.STRING },
+              },
+              required: ['title', 'author', 'content', 'analysis']
+            }
+          }
+        });
+
+        if (result.text) {
+          const fullData = JSON.parse(result.text);
+          const fullPoem: Poem = { ...poem, ...fullData, id: poem.id };
+          setFetchedPoetry(prev => ({ ...prev, [poem.id]: fullPoem }));
+          setSelected(fullPoem);
+          logActivity('literature_read', { title: poem.title, author: poem.author });
+          awardPoints(15);
+        } else {
+          setSelected(poem);
+        }
+      } catch (err) {
+        console.error('Failed to fetch full poem:', err);
+        setSelected(poem);
+        setError("Couldn't fetch full version. Showing preview.");
+      } finally {
+        setSearching(false);
+      }
+    } else {
+      setSelected(poem);
+      if (!selected || selected.id !== poem.id) {
+        logActivity('literature_read', { title: poem.title, author: poem.author });
+        awardPoints(10);
+      }
+    }
+  };
 
   const toggleSave = async (poem: Poem) => {
     if (!auth.currentUser) return;
@@ -94,6 +154,7 @@ export default function Literature() {
           ...poemData,
           category: 'requested'
         };
+        setFetchedPoetry(prev => ({ ...prev, [newPoem.id]: newPoem }));
         setSelected(newPoem);
         setSearchQuery('');
         logActivity('literature_read', { title: newPoem.title, author: newPoem.author });
@@ -123,11 +184,7 @@ export default function Literature() {
               {savedPoems.map((poem) => (
                 <button
                   key={poem.id}
-                  onClick={() => {
-                    setSelected(poem);
-                    logActivity('literature_read', { title: poem.title, author: poem.author });
-                    awardPoints(10);
-                  }}
+                  onClick={() => handleSelectPoem(poem)}
                   className={cn(
                     "w-full text-left p-4 rounded-2xl transition-all duration-300 border",
                     selected?.id === poem.id 
@@ -150,10 +207,7 @@ export default function Literature() {
           {localFilteredPoems.filter(p => !savedPoemIds.includes(p.id.toString())).map((poem) => (
             <button
               key={poem.id}
-              onClick={() => {
-                setSelected(poem);
-                logActivity('literature_read', { title: poem.title, author: poem.author });
-              }}
+              onClick={() => handleSelectPoem(poem)}
               className={cn(
                 "w-full text-left p-6 rounded-[2rem] transition-all duration-300 border",
                 selected?.id === poem.id 
@@ -225,8 +279,16 @@ export default function Literature() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-[3rem] p-12 border border-[#1A1A1A]/5 shadow-2xl shadow-[#5A5A40]/5 sticky top-8"
+            className="relative bg-white rounded-[3rem] p-12 border border-[#1A1A1A]/5 shadow-2xl shadow-[#5A5A40]/5 sticky top-8"
           >
+            {searching && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-[3rem]">
+                <div className="text-center space-y-4">
+                  <Loader2 className="w-12 h-12 text-[#5A5A40] animate-spin mx-auto" />
+                  <p className="text-sm font-medium text-[#5A5A40]">Unrolling full text from the archives...</p>
+                </div>
+              </div>
+            )}
             <div className="flex justify-between items-start mb-12">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
