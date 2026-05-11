@@ -193,9 +193,17 @@ export default function Phonetics() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex-1 w-full max-w-2xl bg-white p-8 rounded-[2.5rem] border border-[#5A5A40]/20 shadow-xl flex flex-col md:flex-row gap-8 items-center"
+            className="flex-1 w-full max-w-2xl bg-white p-8 rounded-[2.5rem] border border-[#5A5A40]/20 shadow-xl flex flex-col gap-6 relative"
           >
-            <div className="flex flex-col items-center gap-4">
+            <button 
+              onClick={() => setSelected(null)}
+              className="flex items-center gap-2 text-[#5A5A40]/60 hover:text-[#5A5A40] transition-colors font-mono text-[10px] uppercase tracking-widest group border-b border-[#5A5A40]/10 pb-2 w-fit"
+            >
+              <RefreshCw className="w-3 h-3 rotate-180 group-hover:rotate-0 transition-transform" />
+              Back to Chart
+            </button>
+            <div className="flex flex-col md:flex-row gap-8 items-center">
+              <div className="flex flex-col items-center gap-4">
               <div className="w-24 h-24 bg-[#5A5A40]/5 rounded-full flex items-center justify-center text-4xl font-bold text-[#5A5A40] border-2 border-[#5A5A40]/10">
                 /{selected.symbol}/
               </div>
@@ -288,9 +296,10 @@ export default function Phonetics() {
                 </AnimatePresence>
               </div>
             </div>
-          </motion.div>
-        )}
-      </header>
+          </div>
+        </motion.div>
+      )}
+    </header>
 
       <div className="space-y-12">
         <PhonemeGrid title="Monophthongs (Pure Vowels)" items={vowels} />

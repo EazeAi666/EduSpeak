@@ -288,6 +288,13 @@ export default function Literature() {
             animate={{ opacity: 1, scale: 1 }}
             className="relative bg-white rounded-[3rem] p-12 border border-[#1A1A1A]/5 shadow-2xl shadow-[#5A5A40]/5 sticky top-8"
           >
+            <button 
+              onClick={() => setSelected(null)}
+              className="flex items-center gap-2 text-[#5A5A40]/60 hover:text-[#5A5A40] transition-colors mb-8 font-mono text-xs uppercase tracking-widest group"
+            >
+              <ChevronRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
+              Back to Library
+            </button>
             {searching && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-[3rem]">
                 <div className="text-center space-y-4">

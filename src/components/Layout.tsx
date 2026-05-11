@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Book, Download, GraduationCap, Languages, Library, Search, User, Sparkles, Globe } from 'lucide-react';
+import { Book, Download, GraduationCap, Languages, Library, Search, User, Sparkles, Globe, ArrowLeft } from 'lucide-react';
 import { View, Accent } from '../types';
 import { cn } from '../lib/utils';
 import { auth, signIn, signOut } from '../lib/firebase';
@@ -139,7 +139,16 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 w-full h-16 bg-white border-b border-[#1A1A1A]/10 px-6 flex items-center justify-between z-40">
         <div className="flex items-center gap-2">
-          <GraduationCap className="w-8 h-8 text-[#5A5A40]" />
+          {currentView !== 'home' ? (
+            <button 
+              onClick={() => setView('home')}
+              className="p-2 -ml-2 rounded-lg hover:bg-[#5A5A40]/10 text-[#5A5A40] transition-colors flex items-center"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+          ) : (
+            <GraduationCap className="w-8 h-8 text-[#5A5A40]" />
+          )}
           <span className="font-serif font-bold text-lg">EduSpeak</span>
         </div>
         <div className="flex items-center gap-4">
@@ -199,6 +208,17 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="p-8 max-w-7xl mx-auto"
           >
+            {currentView !== 'home' && (
+              <motion.button
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                onClick={() => setView('home')}
+                className="hidden md:flex items-center gap-2 text-[#5A5A40] hover:text-[#5A5A40]/70 font-medium mb-8 transition-colors group"
+              >
+                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                Back to Dashboard
+              </motion.button>
+            )}
             {children}
           </motion.div>
         </AnimatePresence>
