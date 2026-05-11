@@ -4,6 +4,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { GraduationCap, LogIn, Loader2 } from 'lucide-react';
+import { logActivity } from '../services/historyService';
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
@@ -24,6 +25,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
             email: u.email,
             lastActive: new Date().toISOString()
           }, { merge: true });
+          
+          await logActivity('user_login', { email: u.email });
         } catch (err) {
           console.error('Failed to initialize user profile:', err);
         }

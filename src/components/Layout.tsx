@@ -127,7 +127,13 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
           )}
           {user ? (
             <button onClick={() => signOut()}>
-              <img src={user.photoURL || ''} alt="" className="w-8 h-8 rounded-full" />
+              {user.photoURL ? (
+                <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full border border-[#1A1A1A]/10" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#5A5A40] text-white flex items-center justify-center text-xs font-bold">
+                  {user.displayName?.[0] || 'U'}
+                </div>
+              )}
             </button>
           ) : (
             <button onClick={() => signIn()} className="text-[#5A5A40]">

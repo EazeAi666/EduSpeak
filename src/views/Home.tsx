@@ -109,6 +109,7 @@ export default function Home({ setView }: HomeProps) {
                         {item.activityType === 'quiz_completion' && `Completed ${item.content?.moduleTitle} quiz`}
                         {item.activityType === 'pronunciation_practice' && `Practiced sound /${item.content?.phoneme}/`}
                         {item.activityType === 'literature_read' && `Read "${item.content?.title}"`}
+                        {item.activityType === 'user_login' && `Signed in to portal`}
                       </p>
                       <div className="flex items-center gap-2 mt-1 text-[10px] text-[#1A1A1A]/40 uppercase tracking-widest">
                         <Clock className="w-3 h-3" />
