@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Loader2, Play, Volume2, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Search, Loader2, Volume2, Bookmark, BookmarkCheck } from 'lucide-react';
+import { cn } from '../lib/utils';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { logActivity } from '../services/historyService';
+import { toggleBookmark, isBookmarked, subscribeToBookmarks, Bookmark as BookmarkType } from '../services/bookmarkService';
 
 interface WordData {
   word: string;
@@ -18,6 +20,14 @@ export default function Dictionary() {
   const [loading, setLoading] = React.useState(false);
   const [result, setResult] = React.useState<WordData | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [isSaved, setIsSaved] = React.useState(false);
+  const [savedWords, setSavedWords] = React.useState<BookmarkType[]>([]);
+
+  React.useEffect(() => {
+    return subscribeToBookmarks('word', (bookmarks) => {
+      setSavedWords(bookmarks);
+    });
+  }, []);
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -35,6 +45,8 @@ export default function Dictionary() {
   const performSearch = async (searchTerm: string) => {
     setLoading(true);
     setError(null);
+    setResult(null);
+    setIsSaved(false);
     try {
       if (!hasApiKey) {
         throw new Error("AI service is not configured. Please add VITE_GEMINI_API_KEY to your environment variables in Netlify.");
@@ -63,12 +75,24 @@ export default function Dictionary() {
         const wordData = JSON.parse(response.text);
         setResult(wordData);
         logActivity('dictionary_search', { word: searchTerm, phonetic: wordData.phonetic });
+        
+        // Check if already bookmarked
+        const saved = await isBookmarked('word', wordData.word);
+        setIsSaved(saved);
       }
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleBookmark = async () => {
+    if (!result) return;
+    const newState = await toggleBookmark('word', result.word, result);
+    if (newState !== undefined) {
+      setIsSaved(newState);
     }
   };
 
@@ -133,8 +157,14 @@ export default function Dictionary() {
                   </button>
                 </div>
               </div>
-              <button className="p-3 text-[#1A1A1A]/20 hover:text-[#5A5A40] transition-colors">
-                <Bookmark className="w-7 h-7" />
+              <button 
+                onClick={handleToggleBookmark}
+                className={cn(
+                  "p-3 rounded-full transition-all active:scale-95",
+                  isSaved ? "bg-[#5A5A40] text-white" : "text-[#1A1A1A]/20 hover:text-[#5A5A40] bg-[#1A1A1A]/5"
+                )}
+              >
+                {isSaved ? <BookmarkCheck className="w-7 h-7" /> : <Bookmark className="w-7 h-7" />}
               </button>
             </div>
 
@@ -171,17 +201,59 @@ export default function Dictionary() {
       </AnimatePresence>
 
       {!result && !loading && (
-        <div className="grid grid-cols-2 gap-4">
-          {['Pedagogy', 'Linguistics', 'Curriculum', 'Phonology'].map(word => (
-            <button 
-              key={word}
-              onClick={() => handleSearchDirectly(word)}
-              className="p-4 bg-white rounded-2xl border border-[#1A1A1A]/5 text-left hover:border-[#5A5A40]/40 transition-colors group"
-            >
-              <div className="text-xs font-mono text-[#1A1A1A]/40 mb-1">Featured Word</div>
-              <div className="font-semibold">{word}</div>
-            </button>
-          ))}
+        <div className="space-y-12">
+          <section className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/30">Featured Words</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {['Pedagogy', 'Linguistics', 'Curriculum', 'Phonology'].map(word => (
+                <button 
+                  key={word}
+                  onClick={() => handleSearchDirectly(word)}
+                  className="p-4 bg-white rounded-2xl border border-[#1A1A1A]/5 text-left hover:border-[#5A5A40]/40 transition-colors group"
+                >
+                  <div className="text-xs font-mono text-[#1A1A1A]/40 mb-1">Featured Word</div>
+                  <div className="font-semibold">{word}</div>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {savedWords.length > 0 && (
+            <section className="space-y-4">
+              <div className="flex items-center gap-2">
+                <BookmarkCheck className="w-5 h-5 text-[#5A5A40]" />
+                <h3 className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/30">My Vocabulary Bank</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {savedWords.map((item) => (
+                  <motion.div 
+                    layout
+                    key={item.id}
+                    className="p-5 bg-white rounded-2xl border border-[#1A1A1A]/5 hover:border-[#5A5A40]/20 transition-all group flex justify-between items-center"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-[#1A1A1A]">{item.itemReference}</h4>
+                      <p className="text-xs text-[#1A1A1A]/40 line-clamp-1">{item.data?.definition || 'Saved for review'}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <button 
+                        onClick={() => speak(item.itemReference)}
+                        className="p-2 bg-[#F5F2ED] rounded-lg text-[#5A5A40] hover:bg-[#5A5A40] hover:text-white transition-all"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleSearchDirectly(item.itemReference)}
+                        className="p-2 bg-[#F5F2ED] rounded-lg text-[#5A5A40] hover:bg-[#5A5A40] hover:text-white transition-all"
+                      >
+                        <Search className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>

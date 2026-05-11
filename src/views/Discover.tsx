@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Volume2, Bookmark, CheckCircle, ArrowRight, RefreshCw, Loader2, BookOpen, History as HistoryIcon } from 'lucide-react';
+import { Sparkles, Volume2, Bookmark, BookmarkCheck, CheckCircle, ArrowRight, RefreshCw, Loader2, BookOpen, History as HistoryIcon } from 'lucide-react';
 import { logActivity } from '../services/historyService';
+import { toggleBookmark, isBookmarked } from '../services/bookmarkService';
 import { cn } from '../lib/utils';
 
 interface Word {
@@ -74,9 +75,18 @@ const DISCOVERY_WORDS: Word[] = [
 export default function Discover() {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isLearned, setIsLearned] = React.useState(false);
+  const [isSaved, setIsSaved] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const currentWord = DISCOVERY_WORDS[currentIndex];
+
+  React.useEffect(() => {
+    const checkSaved = async () => {
+      const saved = await isBookmarked('word', currentWord.word);
+      setIsSaved(saved);
+    };
+    checkSaved();
+  }, [currentWord]);
 
   const handleNext = () => {
     setIsRefreshing(true);
@@ -85,6 +95,13 @@ export default function Discover() {
       setIsLearned(false);
       setIsRefreshing(false);
     }, 400);
+  };
+
+  const handleToggleBookmark = async () => {
+    const newState = await toggleBookmark('word', currentWord.word, currentWord);
+    if (newState !== undefined) {
+      setIsSaved(newState);
+    }
   };
 
   const handleLearn = async () => {
@@ -139,8 +156,14 @@ export default function Discover() {
                   <span className="px-4 py-1.5 bg-[#5A5A40]/10 text-[#5A5A40] rounded-full text-[10px] font-bold uppercase tracking-widest">
                     {currentWord.category}
                   </span>
-                  <button className="text-[#1A1A1A]/20 hover:text-[#5A5A40] transition-colors">
-                    <Bookmark className="w-6 h-6" />
+                  <button 
+                    onClick={handleToggleBookmark}
+                    className={cn(
+                      "transition-all active:scale-95 p-2 rounded-full",
+                      isSaved ? "text-[#5A5A40] bg-[#5A5A40]/10" : "text-[#1A1A1A]/20 hover:text-[#5A5A40]"
+                    )}
+                  >
+                    {isSaved ? <BookmarkCheck className="w-6 h-6" /> : <Bookmark className="w-6 h-6" />}
                   </button>
                 </div>
 
