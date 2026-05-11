@@ -9,6 +9,7 @@ import Training from './views/ProfessionalEnglish';
 import Discover from './views/Discover';
 import AuthGate from './components/AuthGate';
 import SplashScreen from './components/SplashScreen';
+import ErrorBoundary from './components/ErrorBoundary';
 import { View } from './types';
 
 export default function App() {
@@ -16,7 +17,7 @@ export default function App() {
   const [showSplash, setShowSplash] = React.useState(true);
 
   return (
-    <>
+    <ErrorBoundary>
       <AnimatePresence mode="wait">
         {showSplash && (
           <SplashScreen key="splash" onComplete={() => setShowSplash(false)} />
@@ -35,6 +36,6 @@ export default function App() {
           </Layout>
         </AuthGate>
       )}
-    </>
+    </ErrorBoundary>
   );
 }

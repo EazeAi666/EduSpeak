@@ -5,9 +5,25 @@ import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
 // Register service worker for PWA support
-registerSW({ immediate: true });
+try {
+  registerSW({ 
+    immediate: true,
+    onRegisterError(error) {
+      console.error('SW registration error', error);
+    }
+  });
+} catch (e) {
+  console.warn('PWA registration skipped or failed', e);
+}
 
-createRoot(document.getElementById('root')!).render(
+console.log('App initializing...');
+
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('Failed to find root element');
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <App />
   </StrictMode>,
