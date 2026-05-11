@@ -93,6 +93,15 @@ export default function Home({ setView }: HomeProps) {
         {stats && (
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="flex gap-4">
+              <div className="bg-amber-50 p-4 rounded-2xl flex items-center gap-3 border border-amber-100">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-amber-500/60 leading-none mb-1">Level {stats.level}</p>
+                  <p className="text-xl font-bold leading-none">{stats.points}</p>
+                </div>
+              </div>
               <div className="bg-orange-50 p-4 rounded-2xl flex items-center gap-3 border border-orange-100">
                 <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white">
                   <Flame className="w-5 h-5" />

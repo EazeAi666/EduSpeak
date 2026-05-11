@@ -5,6 +5,7 @@ import { cn } from '../lib/utils';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { logActivity } from '../services/historyService';
+import { awardPoints } from '../services/statsService';
 import { toggleBookmark, isBookmarked, subscribeToBookmarks, Bookmark as BookmarkType } from '../services/bookmarkService';
 import { getPreferredAccent } from '../services/settingsService';
 
@@ -76,6 +77,7 @@ export default function Dictionary() {
         const wordData = JSON.parse(response.text);
         setResult(wordData);
         logActivity('dictionary_search', { word: searchTerm, phonetic: wordData.phonetic });
+        awardPoints(5);
         
         // Check if already bookmarked
         const saved = await isBookmarked('word', wordData.word);

@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import TranscriptionChallenge from '../components/TranscriptionChallenge';
 import { logActivity } from '../services/historyService';
+import { awardPoints } from '../services/statsService';
 import { getPreferredAccent } from '../services/settingsService';
 import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
@@ -133,6 +134,10 @@ export default function Phonetics() {
             word: selected.example, 
             score: feedbackData.score 
           });
+          
+          if (feedbackData.score >= 70) {
+            awardPoints(30);
+          }
         }
       };
     } catch (err) {

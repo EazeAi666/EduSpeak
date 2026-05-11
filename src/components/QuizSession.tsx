@@ -5,6 +5,7 @@ import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { QuizQuestion } from '../types';
 import { logActivity } from '../services/historyService';
+import { awardPoints } from '../services/statsService';
 import { cn } from '../lib/utils';
 
 interface QuizSessionProps {
@@ -25,6 +26,11 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
   React.useEffect(() => {
     if (showResult) {
       logActivity('quiz_completion', { moduleTitle, department, score, totalQuestions: questions.length });
+      // Award points based on performance
+      const percentage = (score / questions.length) * 100;
+      if (percentage >= 50) {
+        awardPoints(Math.floor(percentage));
+      }
     }
   }, [showResult, questions.length, score, moduleTitle, department]);
 

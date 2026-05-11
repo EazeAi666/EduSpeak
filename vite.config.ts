@@ -20,14 +20,16 @@ export default defineConfig(({mode}) => {
           theme_color: '#5A5A40',
           icons: [
             {
-              src: 'pwa-192x192.png',
+              src: 'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/graduation-cap.svg',
               sizes: '192x192',
-              type: 'image/png'
+              type: 'image/svg+xml',
+              purpose: 'any maskable'
             },
             {
-              src: 'pwa-512x512.png',
+              src: 'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/graduation-cap.svg',
               sizes: '512x512',
-              type: 'image/png'
+              type: 'image/svg+xml',
+              purpose: 'any maskable'
             }
           ]
         }

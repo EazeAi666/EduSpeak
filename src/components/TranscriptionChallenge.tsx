@@ -4,6 +4,7 @@ import { Search, Loader2, Sparkles, CheckCircle, XCircle, Brain, RefreshCw } fro
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { cn } from '../lib/utils';
+import { awardPoints } from '../services/statsService';
 
 interface Challenge {
   transcription: string;
@@ -85,7 +86,11 @@ export default function TranscriptionChallenge() {
       });
 
       if (result.text) {
-        setFeedback(JSON.parse(result.text));
+        const feedbackData = JSON.parse(result.text);
+        setFeedback(feedbackData);
+        if (feedbackData.isCorrect) {
+          awardPoints(50);
+        }
       }
     } catch (err) {
       console.error('Validation error:', err);

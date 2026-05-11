@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { logActivity } from '../services/historyService';
+import { awardPoints } from '../services/statsService';
 import { db, auth } from '../lib/firebase';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 
@@ -96,6 +97,7 @@ export default function Literature() {
         setSelected(newPoem);
         setSearchQuery('');
         logActivity('literature_read', { title: newPoem.title, author: newPoem.author });
+        awardPoints(15);
       }
     } catch (err) {
       console.error('Poem search error:', err);
@@ -124,6 +126,7 @@ export default function Literature() {
                   onClick={() => {
                     setSelected(poem);
                     logActivity('literature_read', { title: poem.title, author: poem.author });
+                    awardPoints(10);
                   }}
                   className={cn(
                     "w-full text-left p-4 rounded-2xl transition-all duration-300 border",

@@ -14,7 +14,9 @@
         "lastActive": { "type": "string", "format": "date-time" },
         "streak": { "type": "number" },
         "bestStreak": { "type": "number" },
-        "streakLastUpdated": { "type": "string", "format": "date-time" }
+        "streakLastUpdated": { "type": "string", "format": "date-time" },
+        "points": { "type": "number" },
+        "level": { "type": "number" }
       },
       "required": ["uid", "email"]
     },

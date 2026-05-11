@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, ArrowLeft, Volume2, Play, Pause, Square, SkipForward } from 'lucide-react';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import Markdown from 'react-markdown';
+import { awardPoints } from '../services/statsService';
 
 interface StudySessionProps {
   topic: string;
@@ -57,6 +58,7 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
       }
     }
     fetchContent();
+    awardPoints(20); // Small reward for starting a lesson
   }, [topic, moduleTitle, department]);
 
   const handleSpeak = () => {
