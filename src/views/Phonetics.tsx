@@ -1,12 +1,14 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Mic, Square, Loader2, RefreshCw, CheckCircle, AlertCircle, Sparkles, Search } from 'lucide-react';
+import { Play, Mic, Square, Loader2, RefreshCw, CheckCircle, AlertCircle, Sparkles, Search, History, Clock, Trophy } from 'lucide-react';
 import { PHONEMES } from '../constants';
 import { Phoneme } from '../types';
 import { cn } from '../lib/utils';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import TranscriptionChallenge from '../components/TranscriptionChallenge';
 import { logActivity } from '../services/historyService';
+import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 
 export default function Phonetics() {
   const [selected, setSelected] = React.useState<Phoneme | null>(null);
@@ -15,6 +17,22 @@ export default function Phonetics() {
   const [audioBlob, setAudioBlob] = React.useState<Blob | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [feedback, setFeedback] = React.useState<{ score: number; comment: string } | null>(null);
+  const [practiceHistory, setPracticeHistory] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (!auth.currentUser) return;
+    const q = query(
+      collection(db, 'users', auth.currentUser.uid, 'history'),
+      where('activityType', '==', 'pronunciation_practice'),
+      orderBy('timestamp', 'desc'),
+      limit(10)
+    );
+    return onSnapshot(q, (snapshot) => {
+      setPracticeHistory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, `users/${auth.currentUser?.uid}/history`);
+    });
+  }, []);
 
   const speak = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
@@ -395,6 +413,65 @@ export default function Phonetics() {
         </div>
         <TranscriptionChallenge />
       </div>
+
+      <section className="mt-12 bg-white rounded-[2.5rem] border border-[#1A1A1A]/5 p-8 shadow-sm">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-2 bg-[#5A5A40]/10 rounded-xl text-[#5A5A40]">
+            <History className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-serif text-[#1A1A1A]">Recent Practice Sessions</h2>
+            <p className="text-xs text-[#1A1A1A]/40 uppercase tracking-widest font-bold">Track your pronunciation progress</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {practiceHistory.length > 0 ? (
+            practiceHistory.map((session) => (
+              <motion.div 
+                key={session.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-[#F5F2ED] p-6 rounded-[2rem] border border-[#1A1A1A]/5 space-y-4 hover:border-[#5A5A40]/20 transition-all group"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg font-bold text-[#5A5A40] border border-[#1A1A1A]/5 shadow-sm">
+                      /{session.content?.phoneme}/
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#1A1A1A] capitalize">{session.content?.word}</h4>
+                      <div className="flex items-center gap-1 text-[10px] text-[#1A1A1A]/40 uppercase tracking-tighter">
+                        <Clock className="w-3 h-3" />
+                        {new Date(session.timestamp).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase flex items-center gap-1 shadow-sm",
+                    session.content?.score >= 80 ? "bg-emerald-500 text-white" : "bg-orange-500 text-white"
+                  )}>
+                    <Trophy className="w-3 h-3" />
+                    {session.content?.score}%
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => speak(session.content?.word)}
+                  className="w-full py-2 bg-white text-[#5A5A40] text-[10px] font-bold uppercase tracking-widest rounded-xl border border-[#1A1A1A]/5 group-hover:bg-[#5A5A40] group-hover:text-white transition-all active:scale-95"
+                >
+                  Listen Again
+                </button>
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-full py-12 text-center bg-[#F5F2ED]/50 rounded-[2rem] border border-dashed border-[#1A1A1A]/10">
+              <p className="text-[#1A1A1A]/40 text-sm">No practice history available yet.</p>
+              <p className="text-[10px] uppercase tracking-widest text-[#5A5A40] mt-1">Select a phoneme and start practice to see it here</p>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

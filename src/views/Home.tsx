@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History } from 'lucide-react';
 import { View } from '../types';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { db, auth } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 
 interface HomeProps {
   setView: (view: View) => void;
@@ -21,6 +21,8 @@ export default function Home({ setView }: HomeProps) {
     );
     return onSnapshot(q, (snapshot) => {
       setHistory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, `users/${auth.currentUser?.uid}/history`);
     });
   }, []);
 
