@@ -28,7 +28,7 @@ export default function TranscriptionChallenge() {
         throw new Error("AI Challenge generator is offline. Please check your API key.");
       }
       const prompt = `As a phonetics expert, provide one English word and its phonetic transcription (IPA) for a spelling challenge. 
-      The word should be relevant to education or general academic vocabulary.
+      Priority: Use words relevant to the NCE (Nigeria Certificate in Education) curriculum, specifically Social Studies (e.g., Democracy, Amalgamation, Governance) or Professional English for teachers.
       Return as JSON: { "transcription": string, "correctWord": string, "hint": string }`;
 
       const result = await ai.models.generateContent({

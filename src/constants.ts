@@ -328,6 +328,7 @@ export const DAILY_TIPS = [
 ];
 
 export const PRACTICE_WORDS: string[] = [
+  // Pedagogy & Education
   'Pedagogy', 'Curriculum', 'Assessment', 'Instruction', 'Cognitive', 
   'Scaffolding', 'Linguistics', 'Education', 'Evaluation', 'Methodology',
   'Acoustics', 'Articulate', 'Clarity', 'Confidence', 'Delivery',
@@ -336,5 +337,18 @@ export const PRACTICE_WORDS: string[] = [
   'Resonance', 'Rhythm', 'Syllable', 'Terminology', 'Transcription',
   'Vocabulary', 'Workshop', 'Engagement', 'Facilitation', 'Objective',
   'Synchronous', 'Asynchronous', 'Formative', 'Summative', 'Portfolio',
-  'Didactic', 'Heuristic', 'Pragmatic', 'Rhetoric', 'Eloquence'
+  'Didactic', 'Heuristic', 'Pragmatic', 'Rhetoric', 'Eloquence',
+  'Constructivism', 'Metacognition', 'Differentiation', 'Epistemology', 'Resilience',
+
+  // Social Studies & Governance
+  'Democracy', 'Legitimacy', 'Constitutional', 'Bureaucracy', 'Sovereignty',
+  'Amalgamation', 'Nationalism', 'Colonization', 'Decolonize', 'Marginalization',
+  'Federation', 'Autonomy', 'Legislature', 'Judiciary', 'Executive',
+  'Citizenship', 'Leadership', 'Sanctions', 'Diplomacy', 'Infrastructure',
+  'Urbanization', 'Secularism', 'Egalitarian', 'Pluralism', 'Imperialism',
+
+  // Social Sciences & Methodology
+  'Sociology', 'Anthropology', 'Archaeology', 'Psychology', 'Economics',
+  'Geography', 'Demography', 'Qualitative', 'Quantitative', 'Globalization',
+  'Environment', 'Sustainability', 'Conservation', 'Biodiversity', 'Topography'
 ];
