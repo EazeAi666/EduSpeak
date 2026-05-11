@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles } from 'lucide-react';
+import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles, Flame, Trophy } from 'lucide-react';
 import { View } from '../types';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
+import { updateStreak, getUserStats, UserStats } from '../services/statsService';
+import { DAILY_TIPS } from '../constants';
 
 interface HomeProps {
   setView: (view: View) => void;
@@ -11,8 +13,16 @@ interface HomeProps {
 
 export default function Home({ setView }: HomeProps) {
   const [history, setHistory] = React.useState<any[]>([]);
+  const [stats, setStats] = React.useState<UserStats | null>(null);
 
   React.useEffect(() => {
+    const init = async () => {
+      await updateStreak();
+      const userStats = await getUserStats();
+      setStats(userStats);
+    };
+    init();
+
     if (!auth.currentUser) return;
     const q = query(
       collection(db, 'users', auth.currentUser.uid, 'history'),
@@ -26,10 +36,14 @@ export default function Home({ setView }: HomeProps) {
     });
   }, []);
 
+  // Cycle tips based on current date
+  const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+  const dailyTip = DAILY_TIPS[dayOfYear % DAILY_TIPS.length];
+
   const cards = [
     {
       id: 'training',
-      title: 'Professional Training',
+      title: 'Professional Hub',
       description: 'Master classroom delivery, Social Studies, and Academic Writing for your NCE training.',
       icon: GraduationCap,
       color: 'bg-blue-50 text-blue-600',
@@ -66,13 +80,45 @@ export default function Home({ setView }: HomeProps) {
 
   return (
     <div className="space-y-12">
-      <header className="space-y-4">
-        <h1 className="text-5xl font-serif font-medium tracking-tight">
-          Welcome, <span className="italic">Future Educator</span>
-        </h1>
-        <p className="text-xl text-[#1A1A1A]/60 max-w-2xl leading-relaxed">
-          Your comprehensive portal for excellence in English and Phonetics. Designed for NCE students in Nigeria to bridge the gap between learning and teaching.
-        </p>
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-4">
+          <h1 className="text-5xl font-serif font-medium tracking-tight">
+            Welcome, <span className="italic">Future Educator</span>
+          </h1>
+          <p className="text-xl text-[#1A1A1A]/60 max-w-2xl leading-relaxed">
+            Your comprehensive portal for excellence in English and Social Studies. Designed for NCE students in Nigeria to bridge the gap between learning and teaching.
+          </p>
+        </div>
+
+        {stats && (
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="flex gap-4">
+              <div className="bg-orange-50 p-4 rounded-2xl flex items-center gap-3 border border-orange-100">
+                <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white">
+                  <Flame className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-orange-500/60 leading-none mb-1">Day Streak</p>
+                  <p className="text-xl font-bold leading-none">{stats.streak}</p>
+                </div>
+              </div>
+              <div className="bg-emerald-50 p-4 rounded-2xl flex items-center gap-3 border border-emerald-100">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
+                  <Trophy className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-emerald-500/60 leading-none mb-1">Best Streak</p>
+                  <p className="text-xl font-bold leading-none">{stats.bestStreak}</p>
+                </div>
+              </div>
+            </div>
+            {stats.streak > 0 && (
+              <p className="text-sm font-medium text-[#5A5A40] bg-[#5A5A40]/10 px-4 py-2 rounded-full hidden md:block">
+                {stats.streak >= 3 ? 'You are on fire! 🔥' : 'Keep the momentum going!'}
+              </p>
+            )}
+          </div>
+        )}
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -148,12 +194,15 @@ export default function Home({ setView }: HomeProps) {
 
       <section className="bg-[#5A5A40] rounded-[2rem] p-12 text-white overflow-hidden relative">
         <div className="relative z-10 max-w-xl space-y-6">
-          <h2 className="text-3xl font-serif">Today's Teaching Tip</h2>
-          <p className="text-lg text-white/80 italic">
-            "Effective language teaching is not just about rules, but about building confidence in communication. Encourage your students to speak without fear of errors."
+          <div className="flex items-center gap-2 text-white/60">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Today's Teaching Tip</span>
+          </div>
+          <p className="text-2xl md:text-3xl font-serif italic leading-snug">
+            "{dailyTip}"
           </p>
           <div className="pt-4">
-            <span className="text-xs tracking-widest uppercase opacity-60">Daily Inspiration for Teachers</span>
+            <span className="text-xs tracking-widest uppercase opacity-60">Daily Inspiration for the Nigerian Educator</span>
           </div>
         </div>
         <div className="absolute right-[-5%] top-[-20%] w-[50%] h-[140%] bg-white/5 rounded-full blur-3xl rotate-12" />

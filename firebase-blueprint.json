@@ -11,7 +11,10 @@
         "currentModule": { "type": "string" },
         "completedModules": { "type": "array", "items": { "type": "string" } },
         "savedPoems": { "type": "array", "items": { "type": "string" } },
-        "lastActive": { "type": "string", "format": "date-time" }
+        "lastActive": { "type": "string", "format": "date-time" },
+        "streak": { "type": "number" },
+        "bestStreak": { "type": "number" },
+        "streakLastUpdated": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email"]
     },

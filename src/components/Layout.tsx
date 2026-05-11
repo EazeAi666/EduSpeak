@@ -44,7 +44,7 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
 
   const navItems = [
     { id: 'home', label: 'Dashboard', icon: GraduationCap },
-    { id: 'training', label: 'Training', icon: Book },
+    { id: 'training', label: 'Hub', icon: Book },
     { id: 'phonetics', label: 'Phonetics', icon: Languages },
     { id: 'literature', label: 'Literature', icon: Library },
     { id: 'discover', label: 'Discover', icon: Sparkles },

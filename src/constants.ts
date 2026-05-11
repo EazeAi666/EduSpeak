@@ -156,6 +156,27 @@ export const TRAINING_MODULES: Module[] = [
     topics: ['Giving Instructions', 'Managing Class Participation', 'Concept Checking Questions', 'Feedback Strategies']
   },
   {
+    id: 'edu-ped-1',
+    title: 'Teaching Methodology',
+    description: 'Modern pedagogical strategies for the Nigerian classroom.',
+    department: 'english',
+    topics: ['Student-Centered Learning', 'The Heuristic Method', 'Didactic Approaches', 'Classroom Management', 'Instructional Materials Utilization']
+  },
+  {
+    id: 'edu-prep-1',
+    title: 'Lesson Planning & Delivery',
+    description: 'How to prepare effective lesson notes and deliver engaging sessions.',
+    department: 'english',
+    topics: ['Writing Behavioral Objectives', 'Steps in Lesson Note Preparation', 'The Hook: Introduction Strategies', 'Assessment and Evaluation in Class', 'Self-Reflective Teaching']
+  },
+  {
+    id: 'ss-gov-1',
+    title: 'Elements of Government',
+    department: 'social-studies',
+    description: 'Fundamental concepts of political science for Social Studies teachers.',
+    topics: ['Types of Government (Monarchy, Republic, etc.)', 'Separation of Powers', 'Rule of Law', 'Citizenship and Fundamental Rights', 'Political Parties and Manifestos']
+  },
+  {
     id: 'ss-1',
     title: 'Foundations of Social Studies',
     description: 'Introduction to social systems and citizenship education in Nigeria.',
@@ -182,6 +203,13 @@ export const TRAINING_MODULES: Module[] = [
     description: 'Impact of British rule and the path to independence.',
     department: 'social-studies',
     topics: ['The 1914 Amalgamation', 'Regionalism (The Richards Constitution)', 'Nationalist Movements', 'The 1960 Independence', 'Post-Independence Milestones', 'The 1963 Republican Status']
+  },
+  {
+    id: 'ss-gov-2',
+    title: 'Comparative Government',
+    department: 'social-studies',
+    description: 'Analyzing different political systems and their impact on society.',
+    topics: ['Federal vs Unitary Systems', 'Presidential vs Parliamentary', 'Military Rule in Africa', 'Constitution Development in Nigeria']
   },
   {
     id: 'ss-5',
@@ -267,6 +295,29 @@ export const TRAINING_MODULES: Module[] = [
     department: 'social-studies',
     topics: ['Corruption and Integrity', 'Gender Equality', 'Poverty Alleviation', 'Drug Abuse and HIV/AIDS', 'Population Education']
   }
+];
+
+export const DAILY_TIPS = [
+  "When teaching Social Studies, use local examples of governance to make concepts more relatable.",
+  "In Phonetics, use a mirror to help students see the positioning of their lips and tongue.",
+  "Always write behavioral objectives that are SMART: Specific, Measurable, Achievable, Relevant, and Time-bound.",
+  "Literature is a mirror of society; encourage students to find modern Nigerian parallels in classic poems.",
+  "The Schwa /ə/ is the most common sound in English. Mastering it significantly improves fluency.",
+  "Nigerian English often features distinct rhythms; help students identify these during phonetics practice.",
+  "A good lesson note is a roadmap, not a script. Be prepared to adapt based on class energy.",
+  "Civic education is the heartbeat of Social Studies; keep students updated on current Nigerian events.",
+  "Use 'Concept Checking Questions' (CCQs) rather than just asking 'Do you understand?'",
+  "The 6-3-3-4 system focuses on skill acquisition; highlight practical applications in your lessons.",
+  "In government, explain the 'Separation of Powers' using the three arms of the Nigerian state.",
+  "Reading aloud improves both pronunciation for students and confidence for teachers.",
+  "Encourage students to write their own poems inspired by Nigerian pioneers like Soyinka.",
+  "Social Studies helps develop critical thinking about societal problems like corruption and poverty.",
+  "Consistency is key in language learning; encourage 5 minutes of daily practice over weekly marathons.",
+  "The teacher is a facilitator. Create space for students to explore and ask questions.",
+  "Use mnemonic devices to help students remember the arms of government or parts of speech.",
+  "History isn't just about dates; it's about the people and movements that shaped the present.",
+  "Effective classroom management starts with building mutual respect with your students.",
+  "Digital literacy is now an essential part of the modern Nigerian teacher's toolkit."
 ];
 
 export const PRACTICE_WORDS: string[] = [
