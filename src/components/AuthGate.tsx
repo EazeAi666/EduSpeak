@@ -17,15 +17,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       setLoading(false);
       
       if (u) {
-        // Initialize user profile
+        // Initialize user profile via logActivity
         try {
-          const userRef = doc(db, 'users', u.uid);
-          await setDoc(userRef, {
-            uid: u.uid,
-            email: u.email,
-            lastActive: new Date().toISOString()
-          }, { merge: true });
-          
           await logActivity('user_login', { email: u.email });
         } catch (err) {
           console.error('Failed to initialize user profile:', err);
