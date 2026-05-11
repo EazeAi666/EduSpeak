@@ -18,6 +18,8 @@ export default defineConfig(({mode}) => {
           short_name: 'EduSpeak',
           description: 'NCE English and Social Studies Training Hub',
           theme_color: '#5A5A40',
+          background_color: '#F5F2ED',
+          display: 'standalone',
           icons: [
             {
               src: 'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/graduation-cap.svg',
@@ -30,6 +32,49 @@ export default defineConfig(({mode}) => {
               sizes: '512x512',
               type: 'image/svg+xml',
               purpose: 'any maskable'
+            }
+          ]
+        },
+        workbox: {
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-cache',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-webfonts',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/raw\.githubusercontent\.com\/lucide-react\/.*/i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'icons-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24 * 30 // <== 30 days
+                }
+              }
             }
           ]
         }

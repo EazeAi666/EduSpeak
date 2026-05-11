@@ -21,9 +21,17 @@ export default function Dictionary() {
   const [query, setQuery] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [result, setResult] = React.useState<WordData | null>(null);
+  const [cachedResults, setCachedResults] = React.useState<Record<string, WordData>>(() => {
+    const saved = localStorage.getItem('eduspeak_dictionary_cache');
+    return saved ? JSON.parse(saved) : {};
+  });
   const [error, setError] = React.useState<string | null>(null);
   const [isSaved, setIsSaved] = React.useState(false);
   const [savedWords, setSavedWords] = React.useState<BookmarkType[]>([]);
+
+  React.useEffect(() => {
+    localStorage.setItem('eduspeak_dictionary_cache', JSON.stringify(cachedResults));
+  }, [cachedResults]);
 
   React.useEffect(() => {
     return subscribeToBookmarks('word', (bookmarks) => {
@@ -45,6 +53,14 @@ export default function Dictionary() {
   };
 
   const performSearch = async (searchTerm: string) => {
+    const normalizedTerm = searchTerm.toLowerCase().trim();
+    if (cachedResults[normalizedTerm]) {
+      setResult(cachedResults[normalizedTerm]);
+      const saved = await isBookmarked('word', cachedResults[normalizedTerm].word);
+      setIsSaved(saved);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -75,6 +91,7 @@ export default function Dictionary() {
       
       if (response.text) {
         const wordData = JSON.parse(response.text);
+        setCachedResults(prev => ({ ...prev, [normalizedTerm]: wordData }));
         setResult(wordData);
         logActivity('dictionary_search', { word: searchTerm, phonetic: wordData.phonetic });
         awardPoints(5);

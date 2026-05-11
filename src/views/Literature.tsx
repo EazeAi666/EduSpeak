@@ -13,11 +13,18 @@ import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'fir
 
 export default function Literature() {
   const [selected, setSelected] = React.useState<Poem | null>(null);
-  const [fetchedPoetry, setFetchedPoetry] = React.useState<Record<string, Poem>>({});
+  const [fetchedPoetry, setFetchedPoetry] = React.useState<Record<string, Poem>>(() => {
+    const saved = localStorage.getItem('eduspeak_fetched_poetry');
+    return saved ? JSON.parse(saved) : {};
+  });
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searching, setSearching] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [savedPoemIds, setSavedPoemIds] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    localStorage.setItem('eduspeak_fetched_poetry', JSON.stringify(fetchedPoetry));
+  }, [fetchedPoetry]);
 
   React.useEffect(() => {
     if (!auth.currentUser) return;
