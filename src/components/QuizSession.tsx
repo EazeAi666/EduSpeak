@@ -5,6 +5,7 @@ import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { QuizQuestion } from '../types';
 import { logActivity } from '../services/historyService';
+import { cn } from '../lib/utils';
 
 interface QuizSessionProps {
   moduleTitle: string;
@@ -182,17 +183,35 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
         <AnimatePresence>
           {selectedOption !== null && (
             <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="mt-8 pt-8 border-t border-[#1A1A1A]/5 space-y-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-8 pt-8 border-t border-[#1A1A1A]/5 space-y-6"
             >
-              <div className="text-sm text-[#1A1A1A]/60 italic bg-[#5A5A40]/5 p-4 rounded-xl">
-                <span className="font-bold text-[#5A5A40] block mb-1">Professional Insight:</span>
-                {currentQ.explanation}
+              <div className={cn(
+                "p-6 rounded-[2rem] border transition-all duration-500",
+                selectedOption === currentQ.correctAnswer 
+                  ? "bg-emerald-50/50 border-emerald-100" 
+                  : "bg-orange-50/50 border-orange-100"
+              )}>
+                <div className="flex items-start gap-4">
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                    selectedOption === currentQ.correctAnswer ? "bg-emerald-100 text-emerald-600" : "bg-orange-100 text-orange-600"
+                  )}>
+                    <Award className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-bold uppercase tracking-widest text-[#1A1A1A]/80">Professional Feedback</h4>
+                    <p className="text-sm leading-relaxed text-[#1A1A1A]/70 italic">
+                      {currentQ.explanation}
+                    </p>
+                  </div>
+                </div>
               </div>
+
               <button 
                 onClick={handleNext}
-                className="w-full bg-[#5A5A40] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:brightness-110"
+                className="w-full bg-[#5A5A40] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-lg active:scale-95 transition-all"
               >
                 {currentIndex === questions.length - 1 ? 'Finish Assessment' : 'Next Question'}
                 <ChevronRight className="w-5 h-5" />

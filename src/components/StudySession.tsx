@@ -152,51 +152,54 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
             </div>
           </div>
           
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center bg-[#F5F2ED] p-2 rounded-2xl gap-2 shadow-sm border border-[#1A1A1A]/5">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center bg-[#F5F2ED] p-1 rounded-[2rem] gap-1 shadow-inner border border-[#1A1A1A]/5">
               {!isSpeaking || isPaused ? (
                 <button 
                   onClick={handleSpeak}
-                  className="p-3 bg-[#5A5A40] text-white rounded-xl hover:scale-105 transition-all flex items-center gap-2 pr-4"
+                  className="px-6 py-4 bg-[#5A5A40] text-white rounded-full hover:scale-105 transition-all flex items-center gap-3 shadow-lg"
                 >
-                  <Play className="w-5 h-5 fill-current" />
-                  <span className="text-xs font-bold uppercase tracking-widest">{isPaused ? 'Resume' : 'Listen'}</span>
+                  <Play className="w-6 h-6 fill-current" />
+                  <span className="text-sm font-bold uppercase tracking-widest">{isPaused ? 'Resume' : 'Listen Now'}</span>
                 </button>
               ) : (
                 <button 
                   onClick={handlePause}
-                  className="p-3 bg-white text-[#5A5A40] border border-[#5A5A40]/20 rounded-xl hover:scale-105 transition-all flex items-center gap-2 pr-4"
+                  className="px-6 py-4 bg-white text-[#5A5A40] border border-[#5A5A40]/20 rounded-full hover:scale-105 transition-all flex items-center gap-3 shadow-md"
                 >
-                  <Pause className="w-5 h-5 fill-current" />
-                  <span className="text-xs font-bold uppercase tracking-widest">Pause</span>
+                  <Pause className="w-6 h-6 fill-current" />
+                  <span className="text-sm font-bold uppercase tracking-widest">Pause Mode</span>
                 </button>
               )}
               
               {isSpeaking && (
                 <button 
                   onClick={handleStop}
-                  className="p-3 text-[#1A1A1A]/40 hover:text-red-500 transition-colors"
+                  className="p-4 text-[#1A1A1A]/30 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
                   title="Stop Narration"
                 >
-                  <Square className="w-5 h-5 fill-current" />
+                  <Square className="w-6 h-6 fill-current" />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center justify-center gap-2">
-              {[0.75, 1, 1.25, 1.5].map((rate) => (
-                <button
-                  key={rate}
-                  onClick={() => changeRate(rate)}
-                  className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
-                    playbackRate === rate 
-                      ? 'bg-[#5A5A40] text-white' 
-                      : 'bg-[#F5F2ED] text-[#1A1A1A]/40 hover:text-[#5A5A40]'
-                  }`}
-                >
-                  {rate}x
-                </button>
-              ))}
+            <div className="flex items-center justify-between px-2">
+              <span className="text-[10px] font-mono text-[#1A1A1A]/30 uppercase tracking-tighter">Playback Speed</span>
+              <div className="flex gap-1.5">
+                {[0.75, 1, 1.25, 1.5].map((rate) => (
+                  <button
+                    key={rate}
+                    onClick={() => changeRate(rate)}
+                    className={`text-[10px] font-bold w-10 h-6 flex items-center justify-center rounded-full transition-all border ${
+                      playbackRate === rate 
+                        ? 'bg-[#5A5A40] text-white border-transparent shadow-sm' 
+                        : 'bg-white text-[#1A1A1A]/40 border-[#1A1A1A]/5 hover:text-[#5A5A40]'
+                    }`}
+                  >
+                    {rate}x
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </header>
@@ -228,7 +231,24 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
               >
                 <div className="relative">
                   <div className={`w-64 h-64 rounded-full bg-[#F5F2ED] border-8 border-[#5A5A40]/10 flex items-center justify-center transition-all duration-1000 ${isSpeaking && !isPaused ? 'scale-110 shadow-2xl' : 'scale-100 shadow-none'}`}>
-                    <Volume2 className={`w-20 h-20 text-[#5A5A40] ${isSpeaking && !isPaused ? 'animate-pulse' : 'opacity-40'}`} />
+                    <div className="flex items-center gap-1.5 h-20">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <motion.div
+                          key={i}
+                          animate={isSpeaking && !isPaused ? {
+                            height: [20, 60, 30, 80, 40][i-1],
+                            opacity: [0.3, 1, 0.5, 1, 0.4][i-1]
+                          } : { height: 8, opacity: 0.2 }}
+                          transition={{
+                            duration: 0.5,
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            delay: i * 0.1
+                          }}
+                          className="w-2 bg-[#5A5A40] rounded-full"
+                        />
+                      ))}
+                    </div>
                   </div>
                   {isSpeaking && !isPaused && (
                     <div className="absolute inset-0 border-4 border-[#5A5A40] rounded-full animate-ping opacity-20" />
