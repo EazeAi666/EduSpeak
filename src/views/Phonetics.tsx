@@ -5,6 +5,7 @@ import { PHONEMES, PRACTICE_WORDS } from '../constants';
 import { Phoneme } from '../types';
 import { cn } from '../lib/utils';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
+import { Type } from "@google/genai";
 import TranscriptionChallenge from '../components/TranscriptionChallenge';
 import { logActivity } from '../services/historyService';
 import { awardPoints } from '../services/statsService';
@@ -95,51 +96,73 @@ export default function Phonetics() {
       if (!hasApiKey) {
         throw new Error("AI Analysis requires an API key in environment variables.");
       }
-      // Convert blob to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
 
-        const prompt = selected.symbol === '?' 
-          ? `Analyze the user's pronunciation of the word "${selected.example}". Compare it to standard Received Pronunciation (RP).
-             Provide feedback in JSON format: { "score": number (0-100), "comment": string (concise advice for improvement) }.`
-          : `You are a professional phonetics expert. Analyze the user's pronunciation of the sound /${selected.symbol}/ as in the word "${selected.example}".
-             Provide feedback in JSON format: { "score": number (0-100), "comment": string (concise advice for improvement) }. 
-             Focus on clarity, stress, and correct articulation of the specific phoneme.`;
+      // Convert blob to base64 using a Promise for proper async handling
+      const base64Audio = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(audioBlob);
+      });
 
-        const result = await ai.models.generateContent({
-          model: MODELS.TEXT, // Using text model for now, but in a real case we'd send the audio part
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                { text: prompt },
-                {
-                  inlineData: {
-                    mimeType: 'audio/webm',
-                    data: base64Audio
-                  }
+      const prompt = selected.symbol === '?' 
+        ? `You are an expert phonetician. Analyze the user's pronunciation of the word "${selected.example}". Compare it to standard Received Pronunciation (RP).
+           Rate the accuracy from 0-100 and provide concise, actionable advice for improvement (e.g., focus on the long vowel, stress the first syllable).`
+        : `You are a professional phonetics expert. Analyze the user's pronunciation of the sound /${selected.symbol}/ as in the word "${selected.example}".
+           Focus on clarity, stress, and correct articulation of the specific phoneme according to Received Pronunciation (RP).
+           Provide a score and concise advice for improvement.`;
+
+      const result = await ai.models.generateContent({
+        model: MODELS.TEXT,
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: prompt },
+              {
+                inlineData: {
+                  mimeType: audioBlob.type || 'audio/webm',
+                  data: base64Audio
                 }
-              ]
-            }
-          ]
-        });
-
-        if (result.text) {
-          const feedbackData = JSON.parse(result.text);
-          setFeedback(feedbackData);
-          logActivity('pronunciation_practice', { 
-            phoneme: selected.symbol, 
-            word: selected.example, 
-            score: feedbackData.score 
-          });
-          
-          if (feedbackData.score >= 70) {
-            awardPoints(30);
+              }
+            ]
+          }
+        ],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              score: { 
+                type: Type.NUMBER,
+                description: "Accuracy score from 0-100"
+              },
+              comment: { 
+                type: Type.STRING,
+                description: "Concise feedback and advice"
+              }
+            },
+            required: ["score", "comment"]
           }
         }
-      };
+      });
+
+      if (result.text) {
+        const feedbackData = JSON.parse(result.text);
+        setFeedback(feedbackData);
+        logActivity('pronunciation_practice', { 
+          phoneme: selected.symbol, 
+          word: selected.example, 
+          score: feedbackData.score 
+        });
+        
+        if (feedbackData.score >= 70) {
+          await awardPoints(30);
+        }
+      }
     } catch (err) {
       console.error('Analysis error:', err);
     } finally {
