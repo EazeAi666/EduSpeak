@@ -4,6 +4,7 @@ import { Loader2, ArrowLeft, Volume2, Play, Pause, Square, SkipForward } from 'l
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import Markdown from 'react-markdown';
 import { awardPoints } from '../services/statsService';
+import { getPreferredAccent } from '../services/settingsService';
 
 interface StudySessionProps {
   topic: string;
@@ -19,11 +20,15 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
   const [isPaused, setIsPaused] = React.useState(false);
   const [playbackRate, setPlaybackRate] = React.useState(1);
   const [viewMode, setViewMode] = React.useState<'reading' | 'audiobook'>('reading');
+  const [accent, setAccent] = React.useState(getPreferredAccent());
 
   React.useEffect(() => {
+    const handleAccentChange = () => setAccent(getPreferredAccent());
+    window.addEventListener('accentChange', handleAccentChange);
     // Cleanup synthesis on unmount
     return () => {
       window.speechSynthesis.cancel();
+      window.removeEventListener('accentChange', handleAccentChange);
     };
   }, []);
 
@@ -68,10 +73,13 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
       return;
     }
 
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+    }
+
     const cleanText = content.replace(/[#*`]/g, ''); // Remove markdown symbols for better speech
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'en-GB';
+    utterance.lang = accent;
     utterance.rate = playbackRate;
     
     utterance.onstart = () => setIsSpeaking(true);
@@ -79,7 +87,8 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
       setIsSpeaking(false);
       setIsPaused(false);
     };
-    utterance.onerror = () => {
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error', event);
       setIsSpeaking(false);
       setIsPaused(false);
     };
