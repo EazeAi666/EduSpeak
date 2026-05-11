@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, ArrowLeft, Volume2, Play, Pause, Square, SkipForward } from 'lucide-react';
+import { Loader2, ArrowLeft, Volume2, Play, Pause, Square, SkipForward, CheckCircle } from 'lucide-react';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import Markdown from 'react-markdown';
 import { awardPoints } from '../services/statsService';
+import { logActivity } from '../services/historyService';
 import { getPreferredAccent } from '../services/settingsService';
 
 interface StudySessionProps {
@@ -21,6 +22,8 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
   const [playbackRate, setPlaybackRate] = React.useState(1);
   const [viewMode, setViewMode] = React.useState<'reading' | 'audiobook'>('reading');
   const [accent, setAccent] = React.useState(getPreferredAccent());
+  const [isCompleting, setIsCompleting] = React.useState(false);
+  const [completed, setCompleted] = React.useState(false);
 
   React.useEffect(() => {
     const handleAccentChange = () => setAccent(getPreferredAccent());
@@ -284,6 +287,55 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
               </motion.div>
             )}
           </AnimatePresence>
+        )}
+
+        {!loading && content && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-12 pt-12 border-t border-[#1A1A1A]/5 flex flex-col items-center gap-6"
+          >
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-serif">Finished studying?</h3>
+              <p className="text-sm text-[#1A1A1A]/40 uppercase tracking-widest font-bold">Mark this lesson as complete to earn rewards</p>
+            </div>
+            
+            {completed ? (
+              <div className="flex items-center gap-2 text-green-600 font-bold bg-green-50 px-8 py-4 rounded-full border border-green-100">
+                <CheckCircle className="w-6 h-6" />
+                <span>Lesson Completed! +25 Points Awarded</span>
+              </div>
+            ) : (
+              <button
+                onClick={async () => {
+                  setIsCompleting(true);
+                  try {
+                    await awardPoints(25);
+                    await logActivity('lesson_completion', {
+                      topic,
+                      moduleTitle,
+                      department
+                    });
+                    setCompleted(true);
+                  } catch (err) {
+                    console.error(err);
+                  } finally {
+                    setIsCompleting(false);
+                  }
+                }}
+                disabled={isCompleting}
+                className="group relative flex items-center gap-3 bg-[#5A5A40] text-white px-12 py-5 rounded-[2rem] font-bold shadow-2xl hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100"
+              >
+                {isCompleting ? <Loader2 className="w-6 h-6 animate-spin" /> : <CheckCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />}
+                <span className="text-lg">Lesson Complete</span>
+                {!isCompleting && (
+                  <div className="absolute -top-2 -right-2 bg-yellow-400 text-[#5A5A40] text-[10px] px-2 py-1 rounded-full animate-bounce">
+                    +25 PTS
+                  </div>
+                )}
+              </button>
+            )}
+          </motion.div>
         )}
       </motion.div>
     </div>
