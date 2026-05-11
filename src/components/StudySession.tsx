@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, ArrowLeft, Volume2, Play, Pause, Square, SkipForward } from 'lucide-react';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import Markdown from 'react-markdown';
@@ -16,6 +16,8 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
   const [loading, setLoading] = React.useState(true);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
   const [isPaused, setIsPaused] = React.useState(false);
+  const [playbackRate, setPlaybackRate] = React.useState(1);
+  const [viewMode, setViewMode] = React.useState<'reading' | 'audiobook'>('reading');
 
   React.useEffect(() => {
     // Cleanup synthesis on unmount
@@ -68,7 +70,7 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
     const cleanText = content.replace(/[#*`]/g, ''); // Remove markdown symbols for better speech
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'en-GB';
-    utterance.rate = 0.9;
+    utterance.rate = playbackRate;
     
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => {
@@ -94,6 +96,19 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
     setIsPaused(false);
   };
 
+  const changeRate = (rate: number) => {
+    setPlaybackRate(rate);
+    if (isSpeaking && !isPaused) {
+      // Re-start with new rate if currently playing
+      // Note: SynthesisUtterance rate can't be changed mid-speech easily in all browsers
+      // So we restart from the beginning or just apply for next play.
+      // For simplicity, we just set the state and user can restart if they want, 
+      // or we handle it by cancelling and re-speaking.
+      handleStop();
+      setTimeout(() => handleSpeak(), 100);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
       <button 
@@ -116,36 +131,73 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
             <div className="text-xs font-mono uppercase tracking-widest text-[#5A5A40] mb-2">{department} Training</div>
             <h1 className="text-4xl font-serif">{topic}</h1>
             <p className="text-[#1A1A1A]/40">{moduleTitle}</p>
+            
+            <div className="pt-4 flex gap-2">
+              <button 
+                onClick={() => setViewMode('reading')}
+                className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full transition-all ${
+                  viewMode === 'reading' ? 'bg-[#5A5A40] text-white' : 'text-[#1A1A1A]/40 hover:text-[#5A5A40]'
+                }`}
+              >
+                Reading Mode
+              </button>
+              <button 
+                onClick={() => setViewMode('audiobook')}
+                className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full transition-all ${
+                  viewMode === 'audiobook' ? 'bg-[#5A5A40] text-white' : 'text-[#1A1A1A]/40 hover:text-[#5A5A40]'
+                }`}
+              >
+                Audiobook Mode
+              </button>
+            </div>
           </div>
           
-          <div className="flex items-center bg-[#F5F2ED] p-2 rounded-2xl gap-2 shadow-sm border border-[#1A1A1A]/5">
-            {!isSpeaking || isPaused ? (
-              <button 
-                onClick={handleSpeak}
-                className="p-3 bg-[#5A5A40] text-white rounded-xl hover:scale-105 transition-all flex items-center gap-2 pr-4"
-              >
-                <Play className="w-5 h-5 fill-current" />
-                <span className="text-xs font-bold uppercase tracking-widest">{isPaused ? 'Resume' : 'Listen'}</span>
-              </button>
-            ) : (
-              <button 
-                onClick={handlePause}
-                className="p-3 bg-white text-[#5A5A40] border border-[#5A5A40]/20 rounded-xl hover:scale-105 transition-all flex items-center gap-2 pr-4"
-              >
-                <Pause className="w-5 h-5 fill-current" />
-                <span className="text-xs font-bold uppercase tracking-widest">Pause</span>
-              </button>
-            )}
-            
-            {isSpeaking && (
-              <button 
-                onClick={handleStop}
-                className="p-3 text-[#1A1A1A]/40 hover:text-red-500 transition-colors"
-                title="Stop Narration"
-              >
-                <Square className="w-5 h-5 fill-current" />
-              </button>
-            )}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center bg-[#F5F2ED] p-2 rounded-2xl gap-2 shadow-sm border border-[#1A1A1A]/5">
+              {!isSpeaking || isPaused ? (
+                <button 
+                  onClick={handleSpeak}
+                  className="p-3 bg-[#5A5A40] text-white rounded-xl hover:scale-105 transition-all flex items-center gap-2 pr-4"
+                >
+                  <Play className="w-5 h-5 fill-current" />
+                  <span className="text-xs font-bold uppercase tracking-widest">{isPaused ? 'Resume' : 'Listen'}</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={handlePause}
+                  className="p-3 bg-white text-[#5A5A40] border border-[#5A5A40]/20 rounded-xl hover:scale-105 transition-all flex items-center gap-2 pr-4"
+                >
+                  <Pause className="w-5 h-5 fill-current" />
+                  <span className="text-xs font-bold uppercase tracking-widest">Pause</span>
+                </button>
+              )}
+              
+              {isSpeaking && (
+                <button 
+                  onClick={handleStop}
+                  className="p-3 text-[#1A1A1A]/40 hover:text-red-500 transition-colors"
+                  title="Stop Narration"
+                >
+                  <Square className="w-5 h-5 fill-current" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center justify-center gap-2">
+              {[0.75, 1, 1.25, 1.5].map((rate) => (
+                <button
+                  key={rate}
+                  onClick={() => changeRate(rate)}
+                  className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
+                    playbackRate === rate 
+                      ? 'bg-[#5A5A40] text-white' 
+                      : 'bg-[#F5F2ED] text-[#1A1A1A]/40 hover:text-[#5A5A40]'
+                  }`}
+                >
+                  {rate}x
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
@@ -155,9 +207,52 @@ export default function StudySession({ topic, moduleTitle, department, onBack }:
             <p className="text-[#1A1A1A]/40 animate-pulse">Generating your professional study guide...</p>
           </div>
         ) : (
-          <div className="prose prose-stone prose-lg max-w-none prose-headings:font-serif prose-headings:text-[#5A5A40]">
-            <Markdown>{content}</Markdown>
-          </div>
+          <AnimatePresence mode="wait">
+            {viewMode === 'reading' ? (
+              <motion.div 
+                key="reading"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="prose prose-stone prose-lg max-w-none prose-headings:font-serif prose-headings:text-[#5A5A40]"
+              >
+                <Markdown>{content}</Markdown>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="audio"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="py-20 flex flex-col items-center text-center space-y-12"
+              >
+                <div className="relative">
+                  <div className={`w-64 h-64 rounded-full bg-[#F5F2ED] border-8 border-[#5A5A40]/10 flex items-center justify-center transition-all duration-1000 ${isSpeaking && !isPaused ? 'scale-110 shadow-2xl' : 'scale-100 shadow-none'}`}>
+                    <Volume2 className={`w-20 h-20 text-[#5A5A40] ${isSpeaking && !isPaused ? 'animate-pulse' : 'opacity-40'}`} />
+                  </div>
+                  {isSpeaking && !isPaused && (
+                    <div className="absolute inset-0 border-4 border-[#5A5A40] rounded-full animate-ping opacity-20" />
+                  )}
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-serif text-[#5A5A40]">Listening to: {topic}</h3>
+                  <p className="text-[#1A1A1A]/40 max-w-md mx-auto italic">
+                    "Relax and absorb the concepts. You can adjust the playback speed in the header controls."
+                  </p>
+                </div>
+
+                {!isSpeaking && (
+                  <button 
+                    onClick={handleSpeak}
+                    className="flex items-center gap-3 bg-[#5A5A40] text-white px-8 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-all"
+                  >
+                    <Play className="w-6 h-6 fill-current" /> Start Audiobook
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         )}
       </motion.div>
     </div>
