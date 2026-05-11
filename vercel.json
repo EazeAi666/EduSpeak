@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/((?!assets/|pwa-|manifest.webmanifest|sw.js|favicon.ico|apple-touch-icon.png|mask-icon.svg).*)",
-      "destination": "/index.html"
-    }
-  ]
-}

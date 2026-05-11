@@ -39,15 +39,20 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     try {
       await signIn();
     } catch (err) {
-      console.error('Sign in error:', err);
+      console.error('Sign in error details:', err);
       if (err instanceof Error) {
         if (err.message.includes('auth/popup-blocked')) {
           setError('Sign-in popup was blocked by your browser. Please allow popups for this site.');
         } else if (err.message.includes('auth/unauthorized-domain')) {
-          setError('This domain is not authorized for Google Sign-in. Please add it to your Firebase authorized domains.');
+          const currentDomain = window.location.hostname;
+          setError(`This domain (${currentDomain}) is not authorized for Google Sign-in. Please add it to your Firebase Console under Authentication > Settings > Authorized Domains.`);
+        } else if (err.message.includes('auth/operation-not-allowed')) {
+          setError('Google Sign-in is not enabled in your Firebase project. Please enable it in the Authentication > Sign-in method tab.');
         } else {
-          setError('Failed to sign in. Please try again.');
+          setError(`Sign-in failed: ${err.message}. Please check your Firebase settings.`);
         }
+      } else {
+        setError('An unexpected error occurred during sign-in.');
       }
     }
   };

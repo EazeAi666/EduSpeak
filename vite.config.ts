@@ -7,19 +7,26 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
+    // For GitHub Pages deployment:
+    // If you're deploying to https://<USERNAME>.github.io/<REPO>/
+    // uncomment the next line and set it to your repository name:
+    // base: '/your-repo-name/',
+    base: './', // Using relative paths for maximum compatibility with GH Pages
     plugins: [
       react(), 
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        injectRegister: 'auto',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
           name: 'EduSpeak: NCE English Hub',
           short_name: 'EduSpeak',
-          description: 'NCE English and Social Studies Training Hub',
+          description: 'NCE English and Social Studies Training Hub for Nigerian Teachers',
           theme_color: '#5A5A40',
           background_color: '#F5F2ED',
           display: 'standalone',
+          orientation: 'portrait',
           icons: [
             {
               src: 'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/graduation-cap.svg',
@@ -36,6 +43,7 @@ export default defineConfig(({mode}) => {
           ]
         },
         workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
