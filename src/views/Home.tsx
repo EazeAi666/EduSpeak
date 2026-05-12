@@ -74,7 +74,10 @@ export default function Home({ setView }: HomeProps) {
           </div>
           <h2 className="text-3xl font-serif mb-4">Connection Issues</h2>
           <p className="text-[#1A1A1A]/60 mb-8 text-sm leading-relaxed">
-            We're having trouble connecting to your Firebase project. This usually happens if the <b>Firestore Security Rules</b> haven't been published in your console or if there's a problem with the new API key.
+            We're having trouble connecting to your Firebase project. This usually happens if:<br/><br/>
+            1. <b>Firestore API</b> is not enabled in your Google Cloud Console.<br/>
+            2. <b>Security Rules</b> are not published (they must allow guest access now).<br/>
+            3. <b>API Key Restrictions</b> are blocking this domain (AI Studio Preview).
           </p>
           <div className="space-y-4">
             <button 

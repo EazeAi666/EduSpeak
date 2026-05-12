@@ -60,7 +60,8 @@ function getSelectedConfig() {
   };
 }
 
-const config = getSelectedConfig();
+// const config = getSelectedConfig();
+const config = FIREBASE_CONFIG; // Force use of manual config since user provided it
 
 // Debug log (safe)
 console.log('Firebase Config Active Keys:', Object.keys(config).filter(k => !!(config as any)[k]));
@@ -84,8 +85,8 @@ export const db = config.databaseId && config.databaseId !== '(default)'
   ? getFirestore(app, config.databaseId) 
   : getFirestore(app);
 
-// Enable offline persistence
-if (typeof window !== 'undefined') {
+// Persistence disabled to debug connection errors
+if (false && typeof window !== 'undefined') {
   enableMultiTabIndexedDbPersistence(db).catch((err) => {
     if (err.code === 'failed-precondition') {
       // Multiple tabs open, persistence can only be enabled in one tab at a a time.
@@ -99,17 +100,25 @@ if (typeof window !== 'undefined') {
   // Test connection
   const testConnection = async () => {
     try {
+      // Use a timeout for the connection test
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       await getDocFromServer(doc(db, 'test', 'connection'));
+      clearTimeout(timeoutId);
       console.log("Firestore: Connection established successfully.");
     } catch (error: any) {
-      if (error.message?.includes('offline')) {
-        console.error("Firestore: Client is offline. Please check your internet connection or Firebase setup.");
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        console.error("Firestore: Client is offline or service is unavailable. Check API key restrictions, Firestore rules, and ensure the Firestore API is enabled in your Google Cloud Console.");
       } else {
-        console.warn("Firestore: Connection test completed with status:", error.message);
+        console.log("Firestore: Connection test completed with status:", error.message);
       }
     }
   };
-  testConnection();
+  // Only test if we are likely online
+  if (typeof navigator !== 'undefined' && navigator.onLine) {
+    testConnection();
+  }
 }
 
 export { serverTimestamp };
