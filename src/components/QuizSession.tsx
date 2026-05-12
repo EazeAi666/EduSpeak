@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, ArrowLeft, CheckCircle2, XCircle, ChevronRight, Award } from 'lucide-react';
 import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
-import { QuizQuestion } from '../types';
+import { QuizQuestion, Difficulty } from '../types';
 import { logActivity } from '../services/historyService';
 import { awardPoints } from '../services/statsService';
 import { cn } from '../lib/utils';
+import { Brain, Zap, Target } from 'lucide-react';
 
 interface QuizSessionProps {
   moduleTitle: string;
@@ -15,8 +16,9 @@ interface QuizSessionProps {
 }
 
 export default function QuizSession({ moduleTitle, department, onBack }: QuizSessionProps) {
+  const [difficulty, setDifficulty] = React.useState<Difficulty | null>(null);
   const [questions, setQuestions] = React.useState<QuizQuestion[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [selectedOption, setSelectedOption] = React.useState<number | null>(null);
@@ -25,57 +27,79 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
 
   React.useEffect(() => {
     if (showResult) {
-      logActivity('quiz_completion', { moduleTitle, department, score, totalQuestions: questions.length });
-      // Award points based on performance
+      logActivity('quiz_completion', { moduleTitle, department, score, totalQuestions: questions.length, difficulty });
+      // Award points based on performance and difficulty
       const percentage = (score / questions.length) * 100;
       if (percentage >= 50) {
-        awardPoints(Math.floor(percentage));
+        const difficultyMultiplier = difficulty === 'Advanced' ? 1.5 : difficulty === 'Intermediate' ? 1.2 : 1;
+        awardPoints(Math.floor(percentage * difficultyMultiplier));
       }
     }
-  }, [showResult, questions.length, score, moduleTitle, department]);
+  }, [showResult, questions.length, score, moduleTitle, department, difficulty]);
 
-  React.useEffect(() => {
-    async function fetchQuiz() {
-      try {
-        if (!hasApiKey) {
-          throw new Error("AI Quiz generator is offline. Please check your API key.");
-        }
-        const prompt = `Generate 5 high-quality, professional multiple-choice questions for a professional teaching certification (NCE) based on the module: "${moduleTitle}" in the "${department}" department. 
-        Focus on practical classroom application and professional knowledge. Return as JSON array of objects with fields: question (string), options (array of 4 strings), correctAnswer (index 0-3), explanation (string explaining why).`;
+  const fetchQuiz = async (selectedDifficulty: Difficulty) => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (!hasApiKey) {
+        throw new Error("AI Quiz generator is offline. Please check your API key.");
+      }
 
-        const result = await ai.models.generateContent({
-          model: MODELS.TEXT,
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  question: { type: Type.STRING },
-                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  correctAnswer: { type: Type.NUMBER },
-                  explanation: { type: Type.STRING },
-                },
-                required: ['question', 'options', 'correctAnswer', 'explanation']
-              }
+      let difficultyContext = "";
+      if (selectedDifficulty === 'Beginner') {
+        difficultyContext = "Focus on fundamental concepts, basic terminology, and simple classroom scenarios. Questions should be straightforward and clear.";
+      } else if (selectedDifficulty === 'Intermediate') {
+        difficultyContext = "Focus on conceptual application, pedagogical theories, and more complex classroom management scenarios. Require active reasoning and higher-level thinking.";
+      } else {
+        difficultyContext = "Focus on deep critical analysis, complex multidisciplinary integration, and sophisticated professional challenges. Questions should be highly challenging, testing professional mastery and nuanced understanding.";
+      }
+
+      const prompt = `Generate 5 high-quality, professional multiple-choice questions for the NCE (National Certificate in Education) proficiency exam.
+      Module: "${moduleTitle}"
+      Department: "${department}"
+      Difficulty Level: ${selectedDifficulty}
+      
+      Requirements:
+      - ${difficultyContext}
+      - Focus on professional teaching knowledge and classroom application in the Nigerian context.
+      - Return as JSON array of objects with fields: question (string), options (array of 4 strings), correctAnswer (index 0-3), explanation (string explaining why).`;
+
+      const result = await ai.models.generateContent({
+        model: MODELS.TEXT,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                question: { type: Type.STRING },
+                options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                correctAnswer: { type: Type.NUMBER },
+                explanation: { type: Type.STRING },
+              },
+              required: ['question', 'options', 'correctAnswer', 'explanation']
             }
           }
-        });
-        
-        if (result.text) {
-          setQuestions(JSON.parse(result.text));
         }
-      } catch (err) {
-        console.error(err);
-        setError(err instanceof Error ? err.message : "Failed to generate quiz.");
-      } finally {
-        setLoading(false);
+      });
+      
+      if (result.text) {
+        setQuestions(JSON.parse(result.text));
       }
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to generate quiz.");
+    } finally {
+      setLoading(false);
     }
-    fetchQuiz();
-  }, [moduleTitle, department]);
+  };
+
+  const handleDifficultySelect = (lvl: Difficulty) => {
+    setDifficulty(lvl);
+    fetchQuiz(lvl);
+  };
 
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
@@ -87,6 +111,45 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
   };
 
   const currentQ = questions[currentIndex];
+
+  if (!difficulty) {
+    return (
+      <div className="max-w-xl mx-auto space-y-8">
+        <header className="text-center space-y-4">
+          <button onClick={onBack} className="text-[#1A1A1A]/40 flex items-center gap-2 mx-auto hover:text-[#1A1A1A]">
+            <ArrowLeft className="w-4 h-4" /> Cancel
+          </button>
+          <h1 className="text-4xl font-serif">Assessment Difficulty</h1>
+          <p className="text-[#1A1A1A]/60">Select your preferred level for the {moduleTitle} proficiency test.</p>
+        </header>
+
+        <div className="grid gap-4">
+          {[
+            { id: 'Beginner', icon: Brain, desc: 'Fundamental concepts & basic application.', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+            { id: 'Intermediate', icon: Target, desc: 'Advanced conceptual reasoning & theory.', color: 'bg-amber-50 text-amber-600 border-amber-100' },
+            { id: 'Advanced', icon: Zap, desc: 'Critical analysis & complex mastery.', color: 'bg-rose-50 text-rose-600 border-rose-100' }
+          ].map((lvl) => (
+            <button
+              key={lvl.id}
+              onClick={() => handleDifficultySelect(lvl.id as Difficulty)}
+              className="group p-8 bg-white border border-[#1A1A1A]/5 rounded-[2.5rem] text-left hover:border-[#5A5A40] hover:shadow-xl transition-all flex items-center gap-6"
+            >
+              <div className={cn("w-16 h-16 rounded-[1.5rem] flex items-center justify-center shrink-0 transition-transform group-hover:scale-110", lvl.color)}>
+                <lvl.icon className="w-8 h-8" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-bold">{lvl.id}</h3>
+                  <ChevronRight className="w-5 h-5 text-[#1A1A1A]/20 group-hover:text-[#5A5A40] group-hover:translate-x-1 transition-all" />
+                </div>
+                <p className="text-[#1A1A1A]/40 text-sm">{lvl.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

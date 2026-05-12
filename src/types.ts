@@ -26,6 +26,7 @@ export interface Module {
   icon?: string;
   topics: string[];
 }
+export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 
 export interface QuizQuestion {
   question: string;
