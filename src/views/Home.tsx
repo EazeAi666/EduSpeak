@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles, Flame, Trophy } from 'lucide-react';
+import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles, Flame, Trophy, Bookmark, BookmarkCheck, Volume2 } from 'lucide-react';
 import { View } from '../types';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType, getEffectiveUserId } from '../lib/firebase';
 import { updateStreak, getUserStats, UserStats } from '../services/statsService';
-import { DAILY_TIPS } from '../constants';
+import { DAILY_TIPS, PRACTICE_WORDS } from '../constants';
+import { toggleBookmark, isBookmarked } from '../services/bookmarkService';
+import { getPreferredAccent } from '../services/settingsService';
 
 interface HomeProps {
   setView: (view: View) => void;
@@ -16,21 +18,49 @@ export default function Home({ setView }: HomeProps) {
   const [stats, setStats] = React.useState<UserStats | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [connectionError, setConnectionError] = React.useState(false);
+  const [isWordSaved, setIsWordSaved] = React.useState(false);
+
+  // Word of the day logic
+  const today = new Date().toDateString();
+  const wordIndex = Math.abs(today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % PRACTICE_WORDS.length;
+  const wordOfDay = PRACTICE_WORDS[wordIndex];
 
   const init = async () => {
     try {
-      await updateStreak();
+      // Don't let streak update block the whole app if it fails due to transient offline state
+      updateStreak().catch(e => console.warn('Streak update deferred:', e));
+      
       const userStats = await getUserStats();
       setStats(userStats);
+      
+      // Check if word of day is saved
+      const saved = await isBookmarked('word', wordOfDay);
+      setIsWordSaved(saved);
+      
       setConnectionError(false);
     } catch (err) {
       console.error('Stats init error:', err);
-      if (String(err).includes('offline')) {
+      // If we have some stats or local state, maybe we don't need to show the error
+      if (String(err).includes('offline') || String(err).includes('unavailable')) {
+        // We permit continuing in a "limited" mode if offline
+        console.log('Continuing in offline mode');
+      } else {
         setConnectionError(true);
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveWord = async () => {
+    const newState = await toggleBookmark('word', wordOfDay, { word: wordOfDay, definition: 'Mastered from home dashboard' });
+    if (newState !== undefined) setIsWordSaved(newState);
+  };
+
+  const speak = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = getPreferredAccent();
+    window.speechSynthesis.speak(utterance);
   };
 
   React.useEffect(() => {
@@ -186,6 +216,65 @@ export default function Home({ setView }: HomeProps) {
           </div>
         )}
       </header>
+
+      <section className="bg-white rounded-[3rem] p-10 border border-[#1A1A1A]/5 shadow-xl shadow-[#5A5A40]/5 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#5A5A40]/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-[#5A5A40]/10 transition-colors" />
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 text-[#5A5A40]">
+              <Sparkles className="w-5 h-5 animate-pulse" />
+              <span className="text-xs font-bold uppercase tracking-widest">Master Word of the Day</span>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-6">
+                <h2 className="text-6xl font-serif text-[#1A1A1A]">{wordOfDay}</h2>
+                <button 
+                  onClick={() => speak(wordOfDay)}
+                  className="w-12 h-12 rounded-full bg-[#F5F2ED] flex items-center justify-center text-[#5A5A40] hover:scale-110 active:scale-95 transition-all shadow-sm"
+                >
+                  <Volume2 size={20} />
+                </button>
+              </div>
+              <p className="text-[#1A1A1A]/60 italic text-lg max-w-md">
+                Master this important term to elevate your professional teaching vocabulary.
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <button 
+                onClick={handleSaveWord}
+                className={`px-8 py-4 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg ${
+                  isWordSaved 
+                    ? "bg-[#5A5A40] text-white shadow-[#5A5A40]/20" 
+                    : "bg-[#F5F2ED] text-[#1A1A1A]/60 hover:text-[#5A5A40]"
+                }`}
+              >
+                {isWordSaved ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
+                {isWordSaved ? 'Saved to Bank' : 'Save Word'}
+              </button>
+              <button 
+                onClick={() => setView('dictionary')}
+                className="px-8 py-4 bg-white border border-[#1A1A1A]/5 text-[#1A1A1A]/40 hover:text-[#5A5A40] hover:border-[#5A5A40]/20 rounded-2xl font-bold transition-all"
+              >
+                Find Synonyms
+              </button>
+            </div>
+          </div>
+          <div className="hidden md:block">
+            <div className="bg-[#5A5A40]/5 p-8 rounded-[2.5rem] border border-[#5A5A40]/10 space-y-4">
+              <div className="flex items-center gap-2 text-[#5A5A40]/60">
+                <History className="w-4 h-4" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Teaching Usage</span>
+              </div>
+              <p className="text-[#1A1A1A]/70 italic leading-relaxed">
+                "Effective <strong>{wordOfDay}</strong> in our Social Studies curriculum helps students relate theoretical concepts to their daily experiences in the local community."
+              </p>
+              <div className="pt-2 text-[10px] font-mono text-[#1A1A1A]/30 uppercase tracking-[0.2em]">
+                Suggested NCE Context
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -81,12 +81,13 @@ const app = initializeApp({
 });
 
 export const auth = getAuth(app);
-export const db = config.databaseId && config.databaseId !== '(default)' 
-  ? getFirestore(app, config.databaseId) 
+const dbId = (config as any).databaseId;
+export const db = dbId && dbId !== '(default)' 
+  ? getFirestore(app, dbId) 
   : getFirestore(app);
 
-// Persistence disabled to debug connection errors
-if (false && typeof window !== 'undefined') {
+// Persistence enabled for better offline support
+if (typeof window !== 'undefined') {
   enableMultiTabIndexedDbPersistence(db).catch((err) => {
     if (err.code === 'failed-precondition') {
       // Multiple tabs open, persistence can only be enabled in one tab at a a time.
@@ -96,33 +97,13 @@ if (false && typeof window !== 'undefined') {
       console.warn('Firestore persistence failed: Browser not supported');
     }
   });
-
-  // Test connection
-  const testConnection = async () => {
-    try {
-      // Use a timeout for the connection test
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      await getDocFromServer(doc(db, 'test', 'connection'));
-      clearTimeout(timeoutId);
-      console.log("Firestore: Connection established successfully.");
-    } catch (error: any) {
-      if (error.code === 'unavailable' || error.message?.includes('offline')) {
-        console.error("Firestore: Client is offline or service is unavailable. Check API key restrictions, Firestore rules, and ensure the Firestore API is enabled in your Google Cloud Console.");
-      } else {
-        console.log("Firestore: Connection test completed with status:", error.message);
-      }
-    }
-  };
-  // Only test if we are likely online
-  if (typeof navigator !== 'undefined' && navigator.onLine) {
-    testConnection();
-  }
 }
 
 export { serverTimestamp };
 export const googleProvider = new GoogleAuthProvider();
+
+export const signIn = () => signInWithPopup(auth, googleProvider);
+export const signOut = () => auth.signOut();
 
 export enum OperationType {
   CREATE = 'create',

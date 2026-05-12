@@ -301,6 +301,27 @@ export const TRAINING_MODULES: Module[] = [
     description: 'Analyzing societal challenges in the Nigerian context.',
     department: 'social-studies',
     topics: ['Corruption and Integrity', 'Gender Equality', 'Poverty Alleviation', 'Drug Abuse and HIV/AIDS', 'Population Education']
+  },
+  {
+    id: 'punc-1',
+    title: 'Punctuation Hub',
+    description: 'Master the mechanics of English punctuation for professional writing.',
+    department: 'english',
+    topics: ['Full Stops & Commas', 'Colons & Semicolons', 'Apostrophes & Quotes', 'Hyphens & Dashes', 'Question & Exclamation Marks']
+  },
+  {
+    id: 'lit-figures-1',
+    title: 'Figures of Speech',
+    description: 'Learn to identify and use literary devices effectively in your teaching.',
+    department: 'english',
+    topics: ['Simile & Metaphor', 'Personification & Hyperbole', 'Oxymoron & Paradox', 'Irony & Sarcasm', 'Alliteration & Onomatopoeia']
+  },
+  {
+    id: 'vocab-1',
+    title: 'Lexical Mastery: Synonyms',
+    description: 'Expand your teaching vocabulary with synonyms and antonyms.',
+    department: 'english',
+    topics: ['Synonyms in Context', 'Antonyms & Opposites', 'Homophones & Homographs', 'Registers in English', 'Idiomatic Expressions']
   }
 ];
 

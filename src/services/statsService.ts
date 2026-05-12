@@ -15,9 +15,9 @@ const POINTS_PER_LEVEL = 1000;
 export async function awardPoints(amount: number) {
   const uid = getEffectiveUserId();
   const userRef = doc(db, 'users', uid);
-  const userSnap = await getDoc(userRef);
 
   try {
+    const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const data = userSnap.data();
       const currentPoints = data.points || 0;
@@ -32,18 +32,18 @@ export async function awardPoints(amount: number) {
       return { newPoints, newLevel };
     }
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `users/${uid}`);
+    console.warn('Award points deferred (offline):', error);
   }
 }
 
 export async function updateStreak() {
   const uid = getEffectiveUserId();
   const userRef = doc(db, 'users', uid);
-  const userSnap = await getDoc(userRef);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
   try {
+    const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const data = userSnap.data();
       const lastActiveDate = data.streakLastUpdated?.toDate() || new Date(0);
@@ -105,24 +105,28 @@ export async function updateStreak() {
       });
     }
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `users/${uid}`);
+    console.warn('Streak update unsuccessful (offline?):', error);
   }
 }
 
 export async function getUserStats(): Promise<UserStats | null> {
   const uid = getEffectiveUserId();
   const userRef = doc(db, 'users', uid);
-  const userSnap = await getDoc(userRef);
-  if (userSnap.exists()) {
-    const data = userSnap.data();
-    return {
-      streak: data.streak || 0,
-      bestStreak: data.bestStreak || 0,
-      streakLastUpdated: data.streakLastUpdated,
-      lastActive: data.lastActive,
-      points: data.points || 0,
-      level: data.level || 1
-    };
+  try {
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      return {
+        streak: data.streak || 0,
+        bestStreak: data.bestStreak || 0,
+        streakLastUpdated: data.streakLastUpdated,
+        lastActive: data.lastActive,
+        points: data.points || 0,
+        level: data.level || 1
+      };
+    }
+  } catch (error) {
+    console.warn('Stats fetch unsuccessful (offline?):', error);
   }
   return null;
 }
