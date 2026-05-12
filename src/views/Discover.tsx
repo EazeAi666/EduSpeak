@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Volume2, Bookmark, BookmarkCheck, CheckCircle, ArrowRight, RefreshCw, Loader2, BookOpen, History as HistoryIcon } from 'lucide-react';
+import { Sparkles, Volume2, Bookmark, BookmarkCheck, CheckCircle, ArrowRight, RefreshCw, Loader2, BookOpen, History as HistoryIcon, BrainCircuit } from 'lucide-react';
 import { logActivity } from '../services/historyService';
 import { toggleBookmark, isBookmarked } from '../services/bookmarkService';
 import { getPreferredAccent } from '../services/settingsService';
+import { generateNewWord, GeneratedWord } from '../services/aiWordService';
 import { cn } from '../lib/utils';
 
 interface Word {
@@ -14,7 +15,7 @@ interface Word {
   category: 'Academic' | 'Professional' | 'Literary' | 'Idiomatic';
 }
 
-const DISCOVERY_WORDS: Word[] = [
+const INITIAL_WORDS: Word[] = [
   {
     word: 'Pedagogy',
     phonetic: '/ˈped.ə.ɡɒdʒ.i/',
@@ -49,51 +50,48 @@ const DISCOVERY_WORDS: Word[] = [
     definition: 'Intended to teach, particularly in having moral instruction as an ulterior motive.',
     example: 'Her didactic approach helped the students internalize the social studies concepts quickly.',
     category: 'Academic'
-  },
-  {
-    word: 'Acronym',
-    phonetic: '/ˈæk.rə.nɪm/',
-    definition: 'An abbreviation formed from the initial letters of other words and pronounced as a word.',
-    example: 'NCE is an acronym for National Certificate in Education.',
-    category: 'Academic'
-  },
-  {
-    word: 'Pragmatic',
-    phonetic: '/præɡˈmæt.ɪk/',
-    definition: 'Dealing with things sensibly and realistically in a way that is based on practical rather than theoretical considerations.',
-    example: 'A pragmatic teacher adapts their lesson plan based on the resources available in the classroom.',
-    category: 'Professional'
-  },
-  {
-    word: 'Rhetoric',
-    phonetic: '/ˈret.ər.ɪk/',
-    definition: 'The art of effective or persuasive speaking or writing, especially the use of figures of speech.',
-    example: 'Mastering rhetoric is essential for any teacher who wants to inspire their students.',
-    category: 'Academic'
   }
 ];
 
 export default function Discover() {
+  const [words, setWords] = React.useState<Word[]>(INITIAL_WORDS);
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isLearned, setIsLearned] = React.useState(false);
   const [isSaved, setIsSaved] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [aiMode, setAiMode] = React.useState(false);
 
-  const currentWord = DISCOVERY_WORDS[currentIndex];
+  const currentWord = words[currentIndex];
 
   React.useEffect(() => {
     const checkSaved = async () => {
+      if (!currentWord) return;
       const saved = await isBookmarked('word', currentWord.word);
       setIsSaved(saved);
     };
     checkSaved();
   }, [currentWord]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setIsRefreshing(true);
+    
+    // If at the end of the list or in AI mode, generate a new word
+    if (aiMode || currentIndex === words.length - 1) {
+      const newWord = await generateNewWord(words.map(w => w.word));
+      if (newWord) {
+        setWords(prev => [...prev, newWord]);
+        setCurrentIndex(words.length);
+        setIsLearned(false);
+        setIsRefreshing(false);
+        return;
+      }
+    }
+
+    // Fallback to cycling if AI fails or not needed yet
+    setCurrentIndex((prev) => (prev + 1) % words.length);
+    setIsLearned(false);
+    
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % DISCOVERY_WORDS.length);
-      setIsLearned(false);
       setIsRefreshing(false);
     }, 400);
   };
@@ -126,20 +124,36 @@ export default function Discover() {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-[#5A5A40]">
             <Sparkles className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest">Vocabulary Discovery</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Vocabulary Discovery {aiMode && "(AI Enabled)"}</span>
           </div>
           <h1 className="text-5xl font-serif">Expand Your Lexis</h1>
           <p className="text-lg text-[#1A1A1A]/60">Curated words for the professional Nigerian educator.</p>
         </div>
         
-        <button 
-          onClick={handleNext}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 px-6 py-3 bg-[#5A5A40]/5 text-[#5A5A40] rounded-2xl font-bold hover:bg-[#5A5A40] hover:text-white transition-all disabled:opacity-50"
-        >
-          {isRefreshing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
-          Get New Word
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setAiMode(!aiMode)}
+            className={cn(
+              "flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all border",
+              aiMode 
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 shadow-sm" 
+                : "bg-white border-[#1A1A1A]/10 text-[#1A1A1A]/40 hover:bg-[#F5F2ED]"
+            )}
+            title="Toggle AI Word Generation"
+          >
+            <BrainCircuit className="w-5 h-5" />
+            <span className="hidden sm:inline">{aiMode ? "AI Generation Active" : "Enable AI Generation"}</span>
+          </button>
+
+          <button 
+            onClick={handleNext}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-6 py-3 bg-[#5A5A40]/5 text-[#5A5A40] rounded-2xl font-bold hover:bg-[#5A5A40] hover:text-white transition-all disabled:opacity-50"
+          >
+            {isRefreshing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
+            {aiMode ? "Generate New Word" : "Next Word"}
+          </button>
+        </div>
       </header>
 
       <div className="relative">
