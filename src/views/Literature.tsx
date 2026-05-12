@@ -8,7 +8,7 @@ import { ai, MODELS, hasApiKey } from '../lib/gemini';
 import { Type } from '@google/genai';
 import { logActivity } from '../services/historyService';
 import { awardPoints } from '../services/statsService';
-import { db, auth } from '../lib/firebase';
+import { db, auth, getEffectiveUserId } from '../lib/firebase';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 
 export default function Literature() {
@@ -64,8 +64,8 @@ export default function Literature() {
   }, [fetchedPoetry]);
 
   React.useEffect(() => {
-    if (!auth.currentUser) return;
-    const userRef = doc(db, 'users', auth.currentUser.uid);
+    const uid = getEffectiveUserId();
+    const userRef = doc(db, 'users', uid);
     return onSnapshot(userRef, (snapshot) => {
       if (snapshot.exists()) {
         setSavedPoemIds(snapshot.data().savedPoems || []);
@@ -133,8 +133,8 @@ export default function Literature() {
   };
 
   const toggleSave = async (poem: Poem) => {
-    if (!auth.currentUser) return;
-    const userRef = doc(db, 'users', auth.currentUser.uid);
+    const uid = getEffectiveUserId();
+    const userRef = doc(db, 'users', uid);
     const isSaved = savedPoemIds.includes(poem.id.toString());
 
     try {

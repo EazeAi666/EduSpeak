@@ -1,14 +1,14 @@
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
-import { db, auth, handleFirestoreError, OperationType, serverTimestamp } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType, serverTimestamp, getEffectiveUserId } from '../lib/firebase';
 
 export async function logActivity(type: 'dictionary_search' | 'quiz_completion' | 'pronunciation_practice' | 'literature_read' | 'user_login' | 'word_discovery' | 'lesson_completion', content: any) {
-  if (!auth.currentUser) return;
-
-  const historyPath = `users/${auth.currentUser.uid}/history`;
+  const uid = getEffectiveUserId();
+  const historyPath = `users/${uid}/history`;
+  
   try {
-    const historyRef = collection(db, 'users', auth.currentUser.uid, 'history');
+    const historyRef = collection(db, 'users', uid, 'history');
     await addDoc(historyRef, {
-      userId: auth.currentUser.uid,
+      userId: uid,
       activityType: type,
       content,
       timestamp: serverTimestamp()
@@ -17,13 +17,13 @@ export async function logActivity(type: 'dictionary_search' | 'quiz_completion' 
     handleFirestoreError(error, OperationType.CREATE, historyPath);
   }
 
-  const userPath = `users/${auth.currentUser.uid}`;
+  const userPath = `users/${uid}`;
   try {
     // Also update user profile lastActive
-    const userRef = doc(db, 'users', auth.currentUser.uid);
+    const userRef = doc(db, 'users', uid);
     await setDoc(userRef, { 
-      uid: auth.currentUser.uid,
-      email: auth.currentUser.email,
+      uid: uid,
+      email: auth.currentUser?.email || 'guest@example.com',
       lastActive: serverTimestamp() 
     }, { merge: true });
   } catch (error) {

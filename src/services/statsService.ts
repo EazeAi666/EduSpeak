@@ -1,5 +1,5 @@
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType, getEffectiveUserId } from '../lib/firebase';
 
 export interface UserStats {
   streak: number;
@@ -13,9 +13,8 @@ export interface UserStats {
 const POINTS_PER_LEVEL = 1000;
 
 export async function awardPoints(amount: number) {
-  if (!auth.currentUser) return;
-
-  const userRef = doc(db, 'users', auth.currentUser.uid);
+  const uid = getEffectiveUserId();
+  const userRef = doc(db, 'users', uid);
   const userSnap = await getDoc(userRef);
 
   try {
@@ -33,14 +32,13 @@ export async function awardPoints(amount: number) {
       return { newPoints, newLevel };
     }
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}`);
+    handleFirestoreError(error, OperationType.WRITE, `users/${uid}`);
   }
 }
 
 export async function updateStreak() {
-  if (!auth.currentUser) return;
-
-  const userRef = doc(db, 'users', auth.currentUser.uid);
+  const uid = getEffectiveUserId();
+  const userRef = doc(db, 'users', uid);
   const userSnap = await getDoc(userRef);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -93,9 +91,9 @@ export async function updateStreak() {
     } else {
       // First time user
       await setDoc(userRef, {
-        uid: auth.currentUser.uid,
-        email: auth.currentUser.email,
-        displayName: auth.currentUser.displayName,
+        uid: uid,
+        email: auth.currentUser?.email || 'guest@example.com',
+        displayName: auth.currentUser?.displayName || 'Guest User',
         streak: 1,
         bestStreak: 1,
         streakLastUpdated: serverTimestamp(),
@@ -107,13 +105,13 @@ export async function updateStreak() {
       });
     }
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}`);
+    handleFirestoreError(error, OperationType.WRITE, `users/${uid}`);
   }
 }
 
 export async function getUserStats(): Promise<UserStats | null> {
-  if (!auth.currentUser) return null;
-  const userRef = doc(db, 'users', auth.currentUser.uid);
+  const uid = getEffectiveUserId();
+  const userRef = doc(db, 'users', uid);
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {
     const data = userSnap.data();

@@ -100,8 +100,13 @@ if (typeof window !== 'undefined') {
   const testConnection = async () => {
     try {
       await getDocFromServer(doc(db, 'test', 'connection'));
-    } catch (error) {
-      console.warn("Firestore connection test completed (this is normal if the document doesn't exist):", error);
+      console.log("Firestore: Connection established successfully.");
+    } catch (error: any) {
+      if (error.message?.includes('offline')) {
+        console.error("Firestore: Client is offline. Please check your internet connection or Firebase setup.");
+      } else {
+        console.warn("Firestore: Connection test completed with status:", error.message);
+      }
     }
   };
   testConnection();
@@ -140,10 +145,10 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
-      userId: auth.currentUser?.uid,
+      userId: auth.currentUser?.uid || getEffectiveUserId(),
       email: auth.currentUser?.email,
       emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
+      isAnonymous: auth.currentUser?.isAnonymous || !auth.currentUser,
       tenantId: auth.currentUser?.tenantId,
       providerInfo: auth.currentUser?.providerData?.map(provider => ({
         providerId: provider.providerId,
@@ -156,6 +161,18 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }
+
+export const getEffectiveUserId = () => {
+  if (auth.currentUser) return auth.currentUser.uid;
+  if (typeof window === 'undefined') return 'server-guest';
+  
+  let guestId = localStorage.getItem('eduspeak_guest_id');
+  if (!guestId) {
+    guestId = 'guest_' + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('eduspeak_guest_id', guestId);
+  }
+  return guestId;
+};
 
 export const signIn = () => signInWithPopup(auth, googleProvider);
 export const signOut = () => auth.signOut();

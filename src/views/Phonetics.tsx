@@ -11,7 +11,7 @@ import { logActivity } from '../services/historyService';
 import { awardPoints } from '../services/statsService';
 import { getPreferredAccent } from '../services/settingsService';
 import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType, getEffectiveUserId } from '../lib/firebase';
 
 export default function Phonetics() {
   const [selected, setSelected] = React.useState<Phoneme | null>(null);
@@ -30,9 +30,9 @@ export default function Phonetics() {
     setSuggestedWords(shuffled.slice(0, 5));
     setClassroomTerms(shuffled.slice(5, 11));
 
-    if (!auth.currentUser) return;
+    const uid = getEffectiveUserId();
     const q = query(
-      collection(db, 'users', auth.currentUser.uid, 'history'),
+      collection(db, 'users', uid, 'history'),
       where('activityType', '==', 'pronunciation_practice'),
       orderBy('timestamp', 'desc'),
       limit(10)
@@ -40,7 +40,7 @@ export default function Phonetics() {
     return onSnapshot(q, (snapshot) => {
       setPracticeHistory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, `users/${auth.currentUser?.uid}/history`);
+      handleFirestoreError(error, OperationType.LIST, `users/${uid}/history`);
     });
   }, []);
 

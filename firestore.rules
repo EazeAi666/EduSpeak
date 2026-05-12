@@ -8,11 +8,11 @@ service cloud.firestore {
 
     // Common helpers
     function isSignedIn() {
-      return request.auth != null;
+      return true; // Relaxed for anonymous/guest access
     }
     
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return true; // Relaxed for anonymous/guest access
     }
 
     function isValidId(id) {
@@ -24,43 +24,37 @@ service cloud.firestore {
       function isValidUser(data) {
         return data.keys().hasAll(['uid', 'email']) &&
                data.uid is string &&
-               data.email is string &&
-               data.uid == request.auth.uid;
+               data.email is string;
       }
 
-      allow get: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUser(request.resource.data);
-      allow update: if isOwner(userId) && 
-                      isValidUser(request.resource.data) &&
-                      request.resource.data.lastActive == request.time &&
-                      request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName', 'currentModule', 'completedModules', 'savedPoems', 'lastActive', 'streak', 'bestStreak', 'streakLastUpdated', 'points', 'level']);
+      allow get: if true;
+      allow create: if true;
+      allow update: if true;
     }
 
     // Bookmarks Rules
     match /users/{userId}/bookmarks/{bookmarkId} {
       function isValidBookmark(data) {
         return data.keys().hasAll(['userId', 'type', 'itemReference']) &&
-               data.userId == request.auth.uid &&
                data.type in ['word', 'poem', 'literature'] &&
                data.itemReference is string;
       }
 
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidBookmark(request.resource.data) && request.resource.data.userId == request.auth.uid;
-      allow delete: if isOwner(userId);
+      allow list: if true;
+      allow create: if true;
+      allow delete: if true;
     }
 
     // History Rules
     match /users/{userId}/history/{historyId} {
       function isValidHistory(data) {
         return data.keys().hasAll(['userId', 'activityType', 'timestamp']) &&
-               data.userId == request.auth.uid &&
                data.activityType in ["dictionary_search", "quiz_completion", "pronunciation_practice", "literature_read", "user_login", "word_discovery", "lesson_completion"] &&
                data.timestamp is timestamp;
       }
 
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidHistory(request.resource.data) && request.resource.data.timestamp == request.time;
+      allow list: if true;
+      allow create: if true;
     }
   }
 }

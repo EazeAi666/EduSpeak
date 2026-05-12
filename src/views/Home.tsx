@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles, Flame, Trophy } from 'lucide-react';
 import { View } from '../types';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType, getEffectiveUserId } from '../lib/firebase';
 import { updateStreak, getUserStats, UserStats } from '../services/statsService';
 import { DAILY_TIPS } from '../constants';
 
@@ -14,27 +14,81 @@ interface HomeProps {
 export default function Home({ setView }: HomeProps) {
   const [history, setHistory] = React.useState<any[]>([]);
   const [stats, setStats] = React.useState<UserStats | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [connectionError, setConnectionError] = React.useState(false);
 
-  React.useEffect(() => {
-    const init = async () => {
+  const init = async () => {
+    try {
       await updateStreak();
       const userStats = await getUserStats();
       setStats(userStats);
-    };
+      setConnectionError(false);
+    } catch (err) {
+      console.error('Stats init error:', err);
+      if (String(err).includes('offline')) {
+        setConnectionError(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
     init();
 
-    if (!auth.currentUser) return;
+    const uid = getEffectiveUserId();
     const q = query(
-      collection(db, 'users', auth.currentUser.uid, 'history'),
+      collection(db, 'users', uid, 'history'),
       orderBy('timestamp', 'desc'),
       limit(5)
     );
-    return onSnapshot(q, (snapshot) => {
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       setHistory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setConnectionError(false);
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, `users/${auth.currentUser?.uid}/history`);
+      console.error('History sync error:', error);
+      if (error.message.includes('offline')) {
+        setConnectionError(true);
+      }
     });
+
+    return () => unsubscribe();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Sparkles className="w-12 h-12 text-[#5A5A40] animate-pulse" />
+        <p className="font-serif italic text-lg text-[#1A1A1A]/40">Gathering resources...</p>
+      </div>
+    );
+  }
+
+  if (connectionError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
+        <div className="p-12 bg-white rounded-[3rem] border border-[#1A1A1A]/5 shadow-2xl shadow-[#5A5A40]/10 max-w-md mx-6">
+          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <History className="w-10 h-10 text-amber-500" />
+          </div>
+          <h2 className="text-3xl font-serif mb-4">Connection Issues</h2>
+          <p className="text-[#1A1A1A]/60 mb-8 text-sm leading-relaxed">
+            We're having trouble connecting to your Firebase project. This usually happens if the <b>Firestore Security Rules</b> haven't been published in your console or if there's a problem with the new API key.
+          </p>
+          <div className="space-y-4">
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full py-4 bg-[#5A5A40] text-white rounded-2xl hover:brightness-110 transition-all font-bold shadow-lg shadow-[#5A5A40]/20"
+            >
+              Retry Connection
+            </button>
+            <p className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/30">Verification Portal</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Cycle tips based on current date
   const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));

@@ -1,5 +1,5 @@
 import { collection, addDoc, query, where, getDocs, deleteDoc, doc, onSnapshot, orderBy, serverTimestamp } from 'firebase/firestore';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType, getEffectiveUserId } from '../lib/firebase';
 
 export interface Bookmark {
   id?: string;
@@ -11,9 +11,9 @@ export interface Bookmark {
 }
 
 export async function toggleBookmark(type: 'word' | 'poem' | 'literature', itemReference: string, data?: any) {
-  if (!auth.currentUser) return;
-
-  const bookmarksPath = `users/${auth.currentUser.uid}/bookmarks`;
+  const uid = getEffectiveUserId();
+  const bookmarksPath = `users/${uid}/bookmarks`;
+  
   const q = query(
     collection(db, bookmarksPath),
     where('type', '==', type),
@@ -30,7 +30,7 @@ export async function toggleBookmark(type: 'word' | 'poem' | 'literature', itemR
     } else {
       // Bookmark
       await addDoc(collection(db, bookmarksPath), {
-        userId: auth.currentUser.uid,
+        userId: uid,
         type,
         itemReference,
         data: data || null,
@@ -44,9 +44,9 @@ export async function toggleBookmark(type: 'word' | 'poem' | 'literature', itemR
 }
 
 export function subscribeToBookmarks(type: 'word' | 'poem' | 'literature', callback: (bookmarks: Bookmark[]) => void) {
-  if (!auth.currentUser) return () => {};
-
-  const bookmarksPath = `users/${auth.currentUser.uid}/bookmarks`;
+  const uid = getEffectiveUserId();
+  const bookmarksPath = `users/${uid}/bookmarks`;
+  
   const q = query(
     collection(db, bookmarksPath),
     where('type', '==', type),
@@ -65,9 +65,9 @@ export function subscribeToBookmarks(type: 'word' | 'poem' | 'literature', callb
 }
 
 export async function isBookmarked(type: 'word' | 'poem' | 'literature', itemReference: string) {
-  if (!auth.currentUser) return false;
-
-  const bookmarksPath = `users/${auth.currentUser.uid}/bookmarks`;
+  const uid = getEffectiveUserId();
+  const bookmarksPath = `users/${uid}/bookmarks`;
+  
   const q = query(
     collection(db, bookmarksPath),
     where('type', '==', type),

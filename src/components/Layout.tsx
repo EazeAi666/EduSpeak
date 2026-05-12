@@ -109,30 +109,6 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
               <Download className="w-6 h-6" />
             </button>
           )}
-
-          {user ? (
-            <button 
-              onClick={() => signOut()}
-              className="p-3 rounded-xl hover:bg-red-50 text-red-600 transition-colors"
-              title="Sign Out"
-            >
-              {user.photoURL ? (
-                <img src={user.photoURL} alt={user.displayName || ''} className="w-8 h-8 rounded-full border border-[#1A1A1A]/10" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-[#5A5A40] text-white flex items-center justify-center text-xs font-bold">
-                  {user.displayName?.[0] || 'U'}
-                </div>
-              )}
-            </button>
-          ) : (
-            <button 
-              onClick={() => signIn()}
-              className="p-3 rounded-xl hover:bg-[#5A5A40]/10 text-[#1A1A1A]/40 hover:text-[#1A1A1A] transition-colors"
-              title="Sign In"
-            >
-              <User className="w-6 h-6" />
-            </button>
-          )}
         </div>
       </nav>
 
@@ -161,21 +137,6 @@ export default function Layout({ currentView, setView, children }: LayoutProps) 
           {isInstallable && (
             <button onClick={handleInstall} className="text-[#5A5A40]">
               <Download className="w-6 h-6" />
-            </button>
-          )}
-          {user ? (
-            <button onClick={() => signOut()}>
-              {user.photoURL ? (
-                <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full border border-[#1A1A1A]/10" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-[#5A5A40] text-white flex items-center justify-center text-xs font-bold">
-                  {user.displayName?.[0] || 'U'}
-                </div>
-              )}
-            </button>
-          ) : (
-            <button onClick={() => signIn()} className="text-[#5A5A40]">
-              <User className="w-6 h-6" />
             </button>
           )}
         </div>
