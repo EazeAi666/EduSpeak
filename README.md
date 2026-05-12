@@ -20,5 +20,18 @@ Comprehensive training portal for NCE students in Nigeria, specializing in **Eng
 - Framer Motion (Animations)
 - Lucide React (Icons)
 
+## 🌍 Deployment
+
+This project is configured for **GitHub Pages** with automatic builds via GitHub Actions.
+
+### Steps to Deploy:
+1. **GitHub Secret**: Go to your GitHub Repository Settings > Secrets and variables > Actions.
+2. Add a **New repository secret**:
+   - Name: `GEMINI_API_KEY`
+   - Value: *Your Google Gemini API Key*
+3. **Enable Pages**: Go to Settings > Pages.
+   - Under **Build and deployment > Source**, select **GitHub Actions**.
+4. **Push to Main**: Every push to the `main` branch will now automatically build and deploy the application.
+
 ---
 © 2024 Adesina Isreal x SWAL Organization. Built to empower the next generation of educators.
