@@ -19,7 +19,15 @@ export default function Phonetics() {
   const [mediaRecorder, setMediaRecorder] = React.useState<MediaRecorder | null>(null);
   const [audioBlob, setAudioBlob] = React.useState<Blob | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-  const [feedback, setFeedback] = React.useState<{ score: number; comment: string } | null>(null);
+  const [feedback, setFeedback] = React.useState<{ 
+    score: number; 
+    comment: string;
+    accuracy?: number;
+    stress?: number;
+    intonation?: number;
+    rhythm?: number;
+    detailedFeedback?: string;
+  } | null>(null);
   const [practiceHistory, setPracticeHistory] = React.useState<any[]>([]);
   const [suggestedWords, setSuggestedWords] = React.useState<string[]>([]);
   const [classroomTerms, setClassroomTerms] = React.useState<string[]>([]);
@@ -108,14 +116,28 @@ export default function Phonetics() {
         reader.readAsDataURL(audioBlob);
       });
 
-      const prompt = selected.symbol === '?' 
-        ? `You are an expert phonetician. Analyze the user's pronunciation of the word "${selected.example}". Compare it to standard Received Pronunciation (RP).
-           Rate the accuracy from 0-100 and provide concise, actionable advice for improvement (e.g., focus on the long vowel, stress the first syllable).`
-        : `You are a professional phonetics expert. Analyze the user's pronunciation of the sound /${selected.symbol}/ as in the word "${selected.example}".
-           Focus on clarity, stress, and correct articulation of the specific phoneme according to Received Pronunciation (RP).
-           Provide a score and concise advice for improvement.`;
+      const prompt = `You are an expert phonetician specializing in Received Pronunciation (RP). 
+            Analyze the user's audio provided for the text: "${selected.example}".
+            ${selected.symbol === '?' ? 'This is a word or a short phrase.' : 'This focuses on the specific phoneme: /' + selected.symbol + '/.'}
+            
+            Evaluate based on:
+            1. Phoneme Accuracy: Vowel and consonant clarity.
+            2. Word/Sentence Stress: Correct syllable emphasis.
+            3. Intonation: Appropriate rise/fall of pitch.
+            4. Rhythm: Natural flow and connections between words.
+            
+            Provide the result in the following JSON format:
+            {
+              "score": number (Overall score 0-100),
+              "comment": "short encouraging summary",
+              "accuracy": number (0-100),
+              "stress": number (0-100),
+              "intonation": number (0-100),
+              "rhythm": number (0-100),
+              "detailedFeedback": "specific actionable tips for improvement"
+            }`;
 
-      const result = await ai.models.generateContent({
+      const response = await ai.models.generateContent({
         model: MODELS.TEXT,
         contents: [
           {
@@ -136,22 +158,23 @@ export default function Phonetics() {
           responseSchema: {
             type: Type.OBJECT,
             properties: {
-              score: { 
-                type: Type.NUMBER,
-                description: "Accuracy score from 0-100"
-              },
-              comment: { 
-                type: Type.STRING,
-                description: "Concise feedback and advice"
-              }
+              score: { type: Type.NUMBER },
+              comment: { type: Type.STRING },
+              accuracy: { type: Type.NUMBER },
+              stress: { type: Type.NUMBER },
+              intonation: { type: Type.NUMBER },
+              rhythm: { type: Type.NUMBER },
+              detailedFeedback: { type: Type.STRING }
             },
-            required: ["score", "comment"]
+            required: ["score", "comment", "accuracy", "stress", "intonation", "rhythm", "detailedFeedback"]
           }
         }
       });
 
-      if (result.text) {
-        const feedbackData = JSON.parse(result.text);
+      const text = response.text;
+      if (text) {
+        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const feedbackData = JSON.parse(cleanText);
         setFeedback(feedbackData);
         logActivity('pronunciation_practice', { 
           phoneme: selected.symbol, 
@@ -296,24 +319,47 @@ export default function Phonetics() {
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={cn(
-                        "p-4 rounded-2xl border flex gap-4 items-start",
-                        feedback.score >= 80 ? "bg-emerald-50 border-emerald-100" : "bg-orange-50 border-orange-100"
-                      )}
+                      className="space-y-4"
                     >
                       <div className={cn(
-                        "p-2 rounded-lg",
-                        feedback.score >= 80 ? "bg-emerald-500 text-white" : "bg-orange-500 text-white"
+                        "p-4 rounded-2xl border flex gap-4 items-start",
+                        feedback.score >= 80 ? "bg-emerald-50 border-emerald-100" : "bg-orange-50 border-orange-100"
                       )}>
-                        {feedback.score >= 80 ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">{feedback.score}% Accuracy</span>
-                          <span className="text-xs uppercase tracking-widest opacity-60">AI Evaluation</span>
+                        <div className={cn(
+                          "p-2 rounded-lg",
+                          feedback.score >= 80 ? "bg-emerald-500 text-white" : "bg-orange-500 text-white"
+                        )}>
+                          {feedback.score >= 80 ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                         </div>
-                        <p className="text-sm text-[#1A1A1A]/70 italic leading-relaxed">{feedback.comment}</p>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-lg">{feedback.score}% Accuracy</span>
+                            <span className="text-xs uppercase tracking-widest opacity-60">AI Evaluation</span>
+                          </div>
+                          <p className="text-sm text-[#1A1A1A]/70 italic leading-relaxed">{feedback.comment}</p>
+                        </div>
                       </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {[
+                          { label: 'Phonemes', value: feedback.accuracy, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+                          { label: 'Stress', value: feedback.stress, color: 'text-purple-600', bgColor: 'bg-purple-50' },
+                          { label: 'Intonation', value: feedback.intonation, color: 'text-amber-600', bgColor: 'bg-amber-50' },
+                          { label: 'Rhythm', value: feedback.rhythm, color: 'text-rose-600', bgColor: 'bg-rose-50' }
+                        ].map((metric) => (
+                          <div key={metric.label} className={cn("p-3 rounded-xl border border-black/5 flex flex-col items-center", metric.bgColor)}>
+                            <span className="text-[10px] uppercase font-bold tracking-tighter opacity-40">{metric.label}</span>
+                            <span className={cn("text-lg font-bold", metric.color)}>{metric.value}%</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {feedback.detailedFeedback && (
+                        <div className="bg-[#F5F2ED] p-4 rounded-2xl border border-[#1A1A1A]/5">
+                          <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#5A5A40] mb-2">Expert Breakdown</h4>
+                          <p className="text-xs text-[#1A1A1A]/70 leading-relaxed font-medium">{feedback.detailedFeedback}</p>
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -334,7 +380,7 @@ export default function Phonetics() {
         <div className="flex flex-col md:flex-row justify-between items-start gap-8">
           <div className="space-y-2 max-w-xl">
             <h2 className="text-3xl font-serif">Advanced Pronunciation Coach</h2>
-            <p className="text-[#1A1A1A]/60 italic font-medium">Practice any word from the NCE curriculum. Record yourself and receive a detailed phonetic analysis compared to the standard Received Pronunciation (RP).</p>
+            <p className="text-[#1A1A1A]/60 italic font-medium">Practice any word or short phrase from the NCE curriculum. Record yourself and receive a detailed analysis of your phoneme accuracy, sentence stress, and intonation relative to RP standards.</p>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-[#5A5A40]/10 text-[#5A5A40] rounded-full text-xs font-mono tracking-widest uppercase">
             <Sparkles className="w-4 h-4" /> AI Powered
@@ -344,11 +390,11 @@ export default function Phonetics() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-widest font-bold text-[#1A1A1A]/40">Input Target Word</label>
+              <label className="text-xs uppercase tracking-widest font-bold text-[#1A1A1A]/40">Input Target Text (Word or Phrase)</label>
               <div className="flex gap-2">
                 <input 
                   type="text" 
-                  placeholder="e.g. Pedagogy, Curriculum..."
+                  placeholder="e.g. Pedagogy, 'Good morning class'..."
                   className="flex-1 bg-[#F5F2ED] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 ring-[#5A5A40]/20 font-medium transition-all"
                   id="custom-word-input"
                   onKeyDown={(e) => {
@@ -358,7 +404,7 @@ export default function Phonetics() {
                         setSelected({
                           symbol: '?',
                           example: val,
-                          description: `Practicing custom word: ${val}`,
+                          description: val.split(' ').length > 1 ? `Practicing phrase: ${val}` : `Practicing custom word: ${val}`,
                           type: 'vowel' // dummy
                         });
                         speak(val);
@@ -481,11 +527,15 @@ export default function Phonetics() {
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg font-bold text-[#5A5A40] border border-[#1A1A1A]/5 shadow-sm">
-                      /{session.content?.phoneme}/
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg font-bold text-[#5A5A40] border border-[#1A1A1A]/5 shadow-sm overflow-hidden text-center">
+                      {session.content?.phoneme === '?' ? (
+                        <Mic className="w-5 h-5" />
+                      ) : (
+                        <span className="text-sm">/{session.content?.phoneme}/</span>
+                      )}
                     </div>
-                    <div>
-                      <h4 className="font-bold text-[#1A1A1A] capitalize">{session.content?.word}</h4>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-[#1A1A1A] capitalize truncate" title={session.content?.word}>{session.content?.word}</h4>
                       <div className="flex items-center gap-1 text-[10px] text-[#1A1A1A]/40 uppercase tracking-tighter">
                         <Clock className="w-3 h-3" />
                         {(() => {
