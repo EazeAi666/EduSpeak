@@ -1,21 +1,10 @@
 name = "eduspeak-hub"
 compatibility_date = "2024-05-11"
-name = "eduspeak-hub"
-compatibility_date = "2024-05-11"
 
 [assets]
 directory = "./dist"
 
 [vars]
-VITE_APP_NAME = "EduSpeak: NCE English Hub"
-...
-
-[assets]
-directory = "./dist"
-
-[vars]
-# You can add your non-sensitive environment variables here
-# Note: Sensitive variables (like GEMINI_API_KEY) should be set in the Cloudflare Dashboard
 VITE_APP_NAME = "EduSpeak: NCE English Hub"
 VITE_THEME_COLOR = "#5A5A40"
 VITE_FIREBASE_API_KEY = "AIzaSyD5nC0mNljox67Z0jyHX6qoRlUoT4BwFoA"
