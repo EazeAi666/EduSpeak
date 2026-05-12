@@ -6,20 +6,64 @@ import { FIREBASE_CONFIG } from './firebaseConfig';
 
 const env = import.meta.env;
 
-const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || FIREBASE_CONFIG.apiKey || firebaseConfigFromJson.apiKey,
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || FIREBASE_CONFIG.authDomain || firebaseConfigFromJson.authDomain,
-  projectId: env.VITE_FIREBASE_PROJECT_ID || FIREBASE_CONFIG.projectId || firebaseConfigFromJson.projectId,
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || FIREBASE_CONFIG.storageBucket || firebaseConfigFromJson.storageBucket,
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || FIREBASE_CONFIG.messagingSenderId || firebaseConfigFromJson.messagingSenderId,
-  appId: env.VITE_FIREBASE_APP_ID || FIREBASE_CONFIG.appId || firebaseConfigFromJson.appId,
-};
+// Determine which config to use
+function getSelectedConfig() {
+  // 1. Use Environment Variables if available (Cloudflare/Firebase Hosting settings)
+  if (env.VITE_FIREBASE_API_KEY) {
+    console.log('Firebase: Using configuration from environment variables');
+    return {
+      apiKey: env.VITE_FIREBASE_API_KEY,
+      authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: env.VITE_FIREBASE_APP_ID,
+      databaseId: env.VITE_FIREBASE_DATABASE_ID
+    };
+  }
 
-const databaseId = env.VITE_FIREBASE_DATABASE_ID || (FIREBASE_CONFIG as any).databaseId || firebaseConfigFromJson.firestoreDatabaseId;
+  // 2. Use Manual Configuration (firebaseConfig.ts)
+  if (FIREBASE_CONFIG.apiKey) {
+    console.log('Firebase: Using manual configuration from firebaseConfig.ts (Project: ' + FIREBASE_CONFIG.projectId + ')');
+    return {
+      apiKey: FIREBASE_CONFIG.apiKey,
+      authDomain: FIREBASE_CONFIG.authDomain,
+      projectId: FIREBASE_CONFIG.projectId,
+      storageBucket: FIREBASE_CONFIG.storageBucket,
+      messagingSenderId: FIREBASE_CONFIG.messagingSenderId,
+      appId: FIREBASE_CONFIG.appId,
+      databaseId: (FIREBASE_CONFIG as any).databaseId
+    };
+  }
 
-const app = initializeApp(firebaseConfig);
+  // 3. Fallback to System Configuration (firebase-applet-config.json)
+  console.log('Firebase: Using default system configuration');
+  return {
+    apiKey: firebaseConfigFromJson.apiKey,
+    authDomain: firebaseConfigFromJson.authDomain,
+    projectId: firebaseConfigFromJson.projectId,
+    storageBucket: firebaseConfigFromJson.storageBucket,
+    messagingSenderId: firebaseConfigFromJson.messagingSenderId,
+    appId: firebaseConfigFromJson.appId,
+    databaseId: firebaseConfigFromJson.firestoreDatabaseId
+  };
+}
+
+const config = getSelectedConfig();
+
+const app = initializeApp({
+  apiKey: config.apiKey,
+  authDomain: config.authDomain,
+  projectId: config.projectId,
+  storageBucket: config.storageBucket,
+  messagingSenderId: config.messagingSenderId,
+  appId: config.appId,
+});
+
 export const auth = getAuth(app);
-export const db = databaseId && databaseId !== '(default)' ? getFirestore(app, databaseId) : getFirestore(app);
+export const db = config.databaseId && config.databaseId !== '(default)' 
+  ? getFirestore(app, config.databaseId) 
+  : getFirestore(app);
 
 // Enable offline persistence
 if (typeof window !== 'undefined') {
