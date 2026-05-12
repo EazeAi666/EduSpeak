@@ -10,11 +10,19 @@ import Discover from './views/Discover';
 import GuestGate from './components/GuestGate';
 import SplashScreen from './components/SplashScreen';
 import ErrorBoundary from './components/ErrorBoundary';
-import { View } from './types';
+import { View, Department } from './types';
 
 export default function App() {
   const [currentView, setCurrentView] = React.useState<View>('home');
   const [showSplash, setShowSplash] = React.useState(true);
+  const [trainingDept, setTrainingDept] = React.useState<Department>('english');
+  const [trainingModuleId, setTrainingModuleId] = React.useState<string | null>(null);
+
+  const navigateToTraining = (dept: Department, moduleId?: string) => {
+    setTrainingDept(dept);
+    if (moduleId) setTrainingModuleId(moduleId);
+    setCurrentView('training');
+  };
 
   return (
     <ErrorBoundary>
@@ -27,11 +35,18 @@ export default function App() {
       {!showSplash && (
         <GuestGate>
           <Layout currentView={currentView} setView={setCurrentView}>
-            {currentView === 'home' && <Home setView={setCurrentView} />}
+            {currentView === 'home' && <Home setView={setCurrentView} onNavigateToTraining={navigateToTraining} />}
             {currentView === 'phonetics' && <Phonetics />}
             {currentView === 'literature' && <Literature />}
             {currentView === 'dictionary' && <Dictionary />}
-            {currentView === 'training' && <Training />}
+            {currentView === 'training' && (
+              <Training 
+                initialDept={trainingDept} 
+                initialModuleId={trainingModuleId}
+                onDeptChange={setTrainingDept}
+                onModuleChange={setTrainingModuleId}
+              />
+            )}
             {currentView === 'discover' && <Discover />}
           </Layout>
         </GuestGate>

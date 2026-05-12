@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles, Flame, Trophy, Bookmark, BookmarkCheck, Volume2, Type as TypeIcon, Quote, Hash } from 'lucide-react';
-import { View } from '../types';
+import { View, Department } from '../types';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType, getEffectiveUserId } from '../lib/firebase';
 import { updateStreak, getUserStats, UserStats } from '../services/statsService';
@@ -12,9 +12,10 @@ import { cn } from '../lib/utils';
 
 interface HomeProps {
   setView: (view: View) => void;
+  onNavigateToTraining: (dept: Department, moduleId: string) => void;
 }
 
-export default function Home({ setView }: HomeProps) {
+export default function Home({ setView, onNavigateToTraining }: HomeProps) {
   const [history, setHistory] = React.useState<any[]>([]);
   const [stats, setStats] = React.useState<UserStats | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -297,7 +298,7 @@ export default function Home({ setView }: HomeProps) {
           {quickMasteries.map((m) => (
             <button
               key={m.title}
-              onClick={() => setView('training')}
+              onClick={() => onNavigateToTraining(m.dept as Department, m.moduleId)}
               className="flex items-center gap-4 p-6 bg-white border border-[#1A1A1A]/5 rounded-[2rem] hover:border-[#1A1A1A]/20 transition-all group"
             >
               <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", m.bgColor, m.color)}>

@@ -7,12 +7,46 @@ import StudySession from '../components/StudySession';
 import QuizSession from '../components/QuizSession';
 import { Department } from '../types';
 
-export default function Training() {
-  const [activeDept, setActiveDept] = React.useState<Department>('english');
-  const [activeModuleId, setActiveModuleId] = React.useState<string | null>(null);
+interface TrainingProps {
+  initialDept?: Department;
+  initialModuleId?: string | null;
+  onDeptChange?: (dept: Department) => void;
+  onModuleChange?: (moduleId: string | null) => void;
+}
+
+export default function Training({ 
+  initialDept = 'english', 
+  initialModuleId = null,
+  onDeptChange,
+  onModuleChange
+}: TrainingProps) {
+  const [activeDept, setActiveDept] = React.useState<Department>(initialDept);
+  const [activeModuleId, setActiveModuleId] = React.useState<string | null>(initialModuleId);
   const [studyTopic, setStudyTopic] = React.useState<string | null>(null);
   const [quizMode, setQuizMode] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
+
+  // Handle department changes
+  const handleDeptChange = (dept: Department) => {
+    setActiveDept(dept);
+    if (onDeptChange) onDeptChange(dept);
+  };
+
+  // Handle module changes
+  const handleModuleChange = (id: string | null) => {
+    setActiveModuleId(id);
+    if (onModuleChange) onModuleChange(id);
+  };
+
+  // Sync props if they change externally (e.g. clicking from home multiple times)
+  React.useEffect(() => {
+    if (initialDept !== activeDept) {
+      setActiveDept(initialDept);
+    }
+    if (initialModuleId !== activeModuleId) {
+      setActiveModuleId(initialModuleId);
+    }
+  }, [initialDept, initialModuleId]);
 
   const filteredModules = TRAINING_MODULES
     .filter(m => {
@@ -29,12 +63,17 @@ export default function Training() {
     });
   const currentModule = TRAINING_MODULES.find(m => m.id === activeModuleId);
 
-  // Auto-select first module of department if none selected
+  // Auto-select first module of department ONLY if none is provided or valid
   React.useEffect(() => {
-    if (!activeModuleId || (currentModule && currentModule.department !== activeDept)) {
-      setActiveModuleId(filteredModules[0]?.id || null);
+    // If we have an activeModuleId and it matches the current dept, don't auto-reset
+    const moduleInDept = filteredModules.find(m => m.id === activeModuleId);
+    
+    if (!activeModuleId || !moduleInDept) {
+      if (filteredModules.length > 0) {
+        handleModuleChange(filteredModules[0].id);
+      }
     }
-  }, [activeDept, activeModuleId, filteredModules, currentModule]);
+  }, [activeDept, filteredModules]);
 
   if (studyTopic && currentModule) {
     return (
@@ -89,7 +128,7 @@ export default function Training() {
 
           <div className="flex bg-white p-1 rounded-2xl border border-[#1A1A1A]/5 shadow-sm overflow-x-auto no-scrollbar">
           <button 
-            onClick={() => setActiveDept('english')}
+            onClick={() => handleDeptChange('english')}
             className={cn(
               "px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
               activeDept === 'english' ? "bg-[#5A5A40] text-white shadow-lg" : "text-[#1A1A1A]/40 hover:text-[#5A5A40]"
@@ -98,7 +137,7 @@ export default function Training() {
             English
           </button>
           <button 
-            onClick={() => setActiveDept('social-studies')}
+            onClick={() => handleDeptChange('social-studies')}
             className={cn(
               "px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
               activeDept === 'social-studies' ? "bg-[#5A5A40] text-white shadow-lg" : "text-[#1A1A1A]/40 hover:text-[#5A5A40]"
@@ -107,7 +146,7 @@ export default function Training() {
             Social Studies
           </button>
           <button 
-            onClick={() => setActiveDept('specialized')}
+            onClick={() => handleDeptChange('specialized')}
             className={cn(
               "px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
               activeDept === 'specialized' ? "bg-[#5A5A40] text-white shadow-lg" : "text-[#1A1A1A]/40 hover:text-[#5A5A40]"
@@ -125,7 +164,7 @@ export default function Training() {
           {filteredModules.map((m) => (
             <button
               key={m.id}
-              onClick={() => setActiveModuleId(m.id)}
+              onClick={() => handleModuleChange(m.id)}
               className={cn(
                 "w-full flex items-center p-6 rounded-[2rem] border transition-all duration-300",
                 activeModuleId === m.id 
