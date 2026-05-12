@@ -64,7 +64,7 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
       - Focus on professional teaching knowledge and classroom application in the Nigerian context.
       - Return as JSON array of objects with fields: question (string), options (array of 4 strings), correctAnswer (index 0-3), explanation (string explaining why).`;
 
-      const result = await ai.models.generateContent({
+      const response = await ai.models.generateContent({
         model: MODELS.TEXT,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
@@ -85,8 +85,10 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
         }
       });
       
-      if (result.text) {
-        setQuestions(JSON.parse(result.text));
+      const text = response.text;
+      
+      if (text) {
+        setQuestions(JSON.parse(text));
       }
     } catch (err) {
       console.error(err);

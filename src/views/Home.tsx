@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles, Flame, Trophy, Bookmark, BookmarkCheck, Volume2 } from 'lucide-react';
+import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles, Flame, Trophy, Bookmark, BookmarkCheck, Volume2, Type as TypeIcon, Quote, Hash } from 'lucide-react';
 import { View } from '../types';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType, getEffectiveUserId } from '../lib/firebase';
@@ -8,6 +8,7 @@ import { updateStreak, getUserStats, UserStats } from '../services/statsService'
 import { DAILY_TIPS, PRACTICE_WORDS } from '../constants';
 import { toggleBookmark, isBookmarked } from '../services/bookmarkService';
 import { getPreferredAccent } from '../services/settingsService';
+import { cn } from '../lib/utils';
 
 interface HomeProps {
   setView: (view: View) => void;
@@ -156,14 +157,20 @@ export default function Home({ setView }: HomeProps) {
       icon: Search,
       color: 'bg-purple-50 text-purple-600',
     },
-      {
-        id: 'discover',
-        title: 'Word Discovery',
-        description: 'Explore curated academic and professional words to enhance your teaching vocabulary.',
-        icon: Sparkles,
-        color: 'bg-amber-50 text-amber-600',
-      },
+    {
+      id: 'discover',
+      title: 'Word Discovery',
+      description: 'Explore curated academic and professional words to enhance your teaching vocabulary.',
+      icon: Sparkles,
+      color: 'bg-amber-50 text-amber-600',
+    },
   ] as const;
+
+  const quickMasteries = [
+    { title: 'Punctuation', icon: TypeIcon, color: 'text-blue-500', bgColor: 'bg-blue-50' },
+    { title: 'Figures of Speech', icon: Quote, color: 'text-purple-500', bgColor: 'bg-purple-50' },
+    { title: 'Synonyms', icon: Hash, color: 'text-emerald-500', bgColor: 'bg-emerald-50' },
+  ];
 
   return (
     <div className="space-y-12">
@@ -273,6 +280,35 @@ export default function Home({ setView }: HomeProps) {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold font-serif px-2">Teacher Preparation Modules</h2>
+          <button 
+            onClick={() => setView('training')}
+            className="text-xs font-bold uppercase tracking-widest text-[#5A5A40] hover:underline"
+          >
+            View All Training
+          </button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {quickMasteries.map((m) => (
+            <button
+              key={m.title}
+              onClick={() => setView('training')}
+              className="flex items-center gap-4 p-6 bg-white border border-[#1A1A1A]/5 rounded-[2rem] hover:border-[#1A1A1A]/20 transition-all group"
+            >
+              <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", m.bgColor, m.color)}>
+                <m.icon className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] uppercase font-bold tracking-widest text-[#1A1A1A]/40 mb-0.5">Specialized</p>
+                <h4 className="font-bold text-sm tracking-tight">{m.title}</h4>
+              </div>
+            </button>
+          ))}
         </div>
       </section>
 

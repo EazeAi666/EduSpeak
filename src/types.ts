@@ -1,5 +1,5 @@
 export type View = 'home' | 'phonetics' | 'literature' | 'dictionary' | 'training' | 'discover' | 'notes';
-export type Department = 'english' | 'social-studies';
+export type Department = 'english' | 'social-studies' | 'specialized';
 export type Accent = 'en-GB' | 'en-US';
 
 export interface Poem {

@@ -31,7 +31,7 @@ const INITIAL_WORDS: Word[] = [
     category: 'Literary'
   },
   {
-    word: ' करिकुलम (Curriculum)',
+    word: 'Curriculum',
     phonetic: '/kəˈrɪk.jə.ləm/',
     definition: 'The subjects comprising a course of study in a school or college.',
     example: 'The Nigerian NCE curriculum is being updated to reflect 21st-century teaching methods.',
@@ -60,6 +60,7 @@ export default function Discover() {
   const [isSaved, setIsSaved] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [aiMode, setAiMode] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   const currentWord = words[currentIndex];
 
@@ -74,6 +75,7 @@ export default function Discover() {
 
   const handleNext = async () => {
     setIsRefreshing(true);
+    setError(null);
     
     // If at the end of the list or in AI mode, generate a new word
     if (aiMode || currentIndex === words.length - 1) {
@@ -84,6 +86,8 @@ export default function Discover() {
         setIsLearned(false);
         setIsRefreshing(false);
         return;
+      } else if (aiMode) {
+        setError("Generation failed. Please check your connection or AI quota.");
       }
     }
 
@@ -128,6 +132,7 @@ export default function Discover() {
           </div>
           <h1 className="text-5xl font-serif">Expand Your Lexis</h1>
           <p className="text-lg text-[#1A1A1A]/60">Curated words for the professional Nigerian educator.</p>
+          {error && <p className="text-sm text-red-500 font-bold bg-red-50 px-4 py-2 rounded-xl inline-block mt-2">{error}</p>}
         </div>
         
         <div className="flex gap-3">

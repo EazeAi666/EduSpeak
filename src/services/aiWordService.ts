@@ -1,6 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { Type } from "@google/genai";
+import { ai, MODELS } from "../lib/gemini";
 
 export interface GeneratedWord {
   word: string;
@@ -25,8 +24,8 @@ export async function generateNewWord(existingWords: string[]): Promise<Generate
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
+      model: MODELS.TEXT,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -46,8 +45,8 @@ export async function generateNewWord(existingWords: string[]): Promise<Generate
       }
     });
 
-    const result = JSON.parse(response.text);
-    return result as GeneratedWord;
+    const text = response.text;
+    return JSON.parse(text) as GeneratedWord;
   } catch (error) {
     console.error('AI Word Generation Error:', error);
     return null;

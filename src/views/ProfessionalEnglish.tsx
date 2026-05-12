@@ -20,6 +20,11 @@ export default function Training() {
                           m.topics.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
       
       if (searchQuery) return matchesSearch;
+      
+      if (activeDept === 'specialized') {
+        return ['punc-1', 'lit-figures-1', 'vocab-1'].includes(m.id);
+      }
+      
       return m.department === activeDept;
     });
   const currentModule = TRAINING_MODULES.find(m => m.id === activeModuleId);
@@ -82,11 +87,11 @@ export default function Training() {
             )}
           </div>
 
-          <div className="flex bg-white p-1 rounded-2xl border border-[#1A1A1A]/5 shadow-sm">
+          <div className="flex bg-white p-1 rounded-2xl border border-[#1A1A1A]/5 shadow-sm overflow-x-auto no-scrollbar">
           <button 
             onClick={() => setActiveDept('english')}
             className={cn(
-              "px-6 py-2 rounded-xl text-sm font-bold transition-all",
+              "px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
               activeDept === 'english' ? "bg-[#5A5A40] text-white shadow-lg" : "text-[#1A1A1A]/40 hover:text-[#5A5A40]"
             )}
           >
@@ -95,11 +100,20 @@ export default function Training() {
           <button 
             onClick={() => setActiveDept('social-studies')}
             className={cn(
-              "px-6 py-2 rounded-xl text-sm font-bold transition-all",
+              "px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
               activeDept === 'social-studies' ? "bg-[#5A5A40] text-white shadow-lg" : "text-[#1A1A1A]/40 hover:text-[#5A5A40]"
             )}
           >
             Social Studies
+          </button>
+          <button 
+            onClick={() => setActiveDept('specialized')}
+            className={cn(
+              "px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
+              activeDept === 'specialized' ? "bg-[#5A5A40] text-white shadow-lg" : "text-[#1A1A1A]/40 hover:text-[#5A5A40]"
+            )}
+          >
+            Specialized Prep
           </button>
         </div>
       </div>
@@ -123,7 +137,11 @@ export default function Training() {
                 "w-12 h-12 rounded-2xl flex items-center justify-center mr-4 shadow-sm",
                 activeModuleId === m.id ? "bg-[#5A5A40] text-white" : "bg-white text-[#5A5A40]"
               )}>
-                {m.department === 'english' ? <GraduationCap className="w-6 h-6" /> : <Globe className="w-6 h-6" />}
+                {m.department === 'english' && <GraduationCap className="w-6 h-6" />}
+                {m.department === 'social-studies' && <Globe className="w-6 h-6" />}
+                {m.department === 'specialized' && <Presentation className="w-6 h-6" />}
+                {/* Fallback for mixed types in specialized prep */}
+                {!['english', 'social-studies', 'specialized'].includes(m.department) && <Presentation className="w-6 h-6" />}
               </div>
               <div className="flex-1 text-left">
                 <h4 className="font-bold text-sm leading-tight">{m.title}</h4>
@@ -144,7 +162,10 @@ export default function Training() {
             >
               <div className="flex items-center gap-4 mb-10 pb-8 border-b border-[#1A1A1A]/5">
                 <div className="bg-[#5A5A40] p-4 rounded-2xl text-white shadow-lg">
-                   {currentModule.department === 'english' ? <GraduationCap className="w-8 h-8" /> : <Globe className="w-8 h-8" />}
+                   {currentModule.department === 'english' && <GraduationCap className="w-8 h-8" />}
+                   {currentModule.department === 'social-studies' && <Globe className="w-8 h-8" />}
+                   {currentModule.department === 'specialized' && <Presentation className="w-8 h-8" />}
+                   {!['english', 'social-studies', 'specialized'].includes(currentModule.department) && <Presentation className="w-8 h-8" />}
                 </div>
                 <div>
                   <h2 className="text-3xl font-serif text-[#1A1A1A]">{currentModule.title}</h2>
