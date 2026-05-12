@@ -175,13 +175,32 @@ export const getEffectiveUserId = () => {
   if (auth.currentUser) return auth.currentUser.uid;
   if (typeof window === 'undefined') return 'server-guest';
   
+  const nickname = localStorage.getItem('eduspeak_nickname');
+  if (nickname) {
+    // We use a prefix to distinguish from actual Google UIDs
+    return `guest_name_${nickname.toLowerCase().trim().replace(/[^a-z0-9]/g, '_')}`;
+  }
+
   let guestId = localStorage.getItem('eduspeak_guest_id');
   if (!guestId) {
-    guestId = 'guest_' + Math.random().toString(36).substring(2, 15);
+    guestId = 'guest_anon_' + Math.random().toString(36).substring(2, 15);
     localStorage.setItem('eduspeak_guest_id', guestId);
   }
   return guestId;
 };
 
-export const signIn = () => signInWithPopup(auth, googleProvider);
-export const signOut = () => auth.signOut();
+export const setGuestNickname = (name: string) => {
+  localStorage.setItem('eduspeak_nickname', name);
+  // Also ensure we have a stable ID for this name
+  const guestId = `guest_name_${name.toLowerCase().trim().replace(/[^a-z0-9]/g, '_')}`;
+  localStorage.setItem('eduspeak_guest_id', guestId);
+};
+
+export const getGuestNickname = () => {
+  return localStorage.getItem('eduspeak_nickname') || '';
+};
+
+export const clearGuestSession = () => {
+  localStorage.removeItem('eduspeak_nickname');
+  localStorage.removeItem('eduspeak_guest_id');
+};

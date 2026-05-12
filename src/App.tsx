@@ -7,7 +7,7 @@ import Literature from './views/Literature';
 import Dictionary from './views/Dictionary';
 import Training from './views/ProfessionalEnglish';
 import Discover from './views/Discover';
-import AuthGate from './components/AuthGate';
+import GuestGate from './components/GuestGate';
 import SplashScreen from './components/SplashScreen';
 import ErrorBoundary from './components/ErrorBoundary';
 import { View } from './types';
@@ -25,7 +25,7 @@ export default function App() {
       </AnimatePresence>
       
       {!showSplash && (
-        <AuthGate>
+        <GuestGate>
           <Layout currentView={currentView} setView={setCurrentView}>
             {currentView === 'home' && <Home setView={setCurrentView} />}
             {currentView === 'phonetics' && <Phonetics />}
@@ -34,7 +34,7 @@ export default function App() {
             {currentView === 'training' && <Training />}
             {currentView === 'discover' && <Discover />}
           </Layout>
-        </AuthGate>
+        </GuestGate>
       )}
     </ErrorBoundary>
   );

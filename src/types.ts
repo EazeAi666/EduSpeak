@@ -1,4 +1,4 @@
-export type View = 'home' | 'phonetics' | 'literature' | 'dictionary' | 'training' | 'discover';
+export type View = 'home' | 'phonetics' | 'literature' | 'dictionary' | 'training' | 'discover' | 'notes';
 export type Department = 'english' | 'social-studies';
 export type Accent = 'en-GB' | 'en-US';
 
