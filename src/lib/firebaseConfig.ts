@@ -5,5 +5,6 @@ export const FIREBASE_CONFIG = {
   storageBucket: "edu-speak.firebasestorage.app",
   messagingSenderId: "259249537841",
   appId: "1:259249537841:web:414b82e6611c6df032a610",
-  databaseId: "(default)"
+  // Specify a database ID only if you are using a non-default database
+  // databaseId: "(default)" 
 };

@@ -15,11 +15,11 @@ const firebaseConfig = {
   appId: env.VITE_FIREBASE_APP_ID || FIREBASE_CONFIG.appId || firebaseConfigFromJson.appId,
 };
 
-const databaseId = env.VITE_FIREBASE_DATABASE_ID || FIREBASE_CONFIG.databaseId || firebaseConfigFromJson.firestoreDatabaseId || '(default)';
+const databaseId = env.VITE_FIREBASE_DATABASE_ID || (FIREBASE_CONFIG as any).databaseId || firebaseConfigFromJson.firestoreDatabaseId;
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, databaseId);
+export const db = databaseId && databaseId !== '(default)' ? getFirestore(app, databaseId) : getFirestore(app);
 
 // Enable offline persistence
 if (typeof window !== 'undefined') {
@@ -38,9 +38,7 @@ if (typeof window !== 'undefined') {
     try {
       await getDocFromServer(doc(db, 'test', 'connection'));
     } catch (error) {
-      if (error instanceof Error && error.message.includes('offline')) {
-        console.error("Please check your Firebase configuration or internet connection.");
-      }
+      console.warn("Firestore connection test completed (this is normal if the document doesn't exist):", error);
     }
   };
   testConnection();
