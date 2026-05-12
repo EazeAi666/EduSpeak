@@ -41,8 +41,10 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
           setError(`This domain (${currentDomain}) is not authorized for Google Sign-in. Please add it to your Firebase Console under Authentication > Settings > Authorized Domains.`);
         } else if (err.message.includes('auth/operation-not-allowed')) {
           setError('Google Sign-in is not enabled in your Firebase project. Please enable it in the Authentication > Sign-in method tab.');
+        } else if (err.message.includes('auth/api-key-not-valid')) {
+          setError('The Firebase API Key provided is invalid. Please double-check your API key in the Firebase Console (Project Settings > General).');
         } else {
-          setError(`Sign-in failed: ${err.message}. Please check your Firebase settings.`);
+          setError(`Sign-in failed: ${err.message}. Please check your Firebase settings in src/lib/firebaseConfig.ts.`);
         }
       } else {
         setError('An unexpected error occurred during sign-in.');

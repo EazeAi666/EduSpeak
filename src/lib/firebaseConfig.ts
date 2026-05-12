@@ -1,5 +1,5 @@
 export const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD5nC0mNljox67Z0jyHX6qoRlUoT4BwFoA",
+  apiKey: "AIzaSyDXEiAkNKiQcg1bsqU1oC8LNxXEUtiB0xQ",
   authDomain: "edu-speak.firebaseapp.com",
   projectId: "edu-speak",
   storageBucket: "edu-speak.firebasestorage.app",
