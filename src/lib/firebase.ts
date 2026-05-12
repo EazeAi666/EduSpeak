@@ -8,36 +8,47 @@ const env = import.meta.env;
 
 // Determine which config to use
 function getSelectedConfig() {
-  // 1. Use Environment Variables if available (Cloudflare/Firebase Hosting settings)
-  if (env.VITE_FIREBASE_API_KEY) {
-    console.log('Firebase: Using configuration from environment variables');
+  const manual = FIREBASE_CONFIG;
+  const envVars = {
+    apiKey: env.VITE_FIREBASE_API_KEY,
+    authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: env.VITE_FIREBASE_APP_ID,
+    databaseId: env.VITE_FIREBASE_DATABASE_ID
+  };
+
+  // 1. Check Environment Variables first
+  if (envVars.apiKey && envVars.apiKey.trim().length > 10) {
+    console.log('Firebase: Using Env config (Project: ' + envVars.projectId + ')');
     return {
-      apiKey: env.VITE_FIREBASE_API_KEY,
-      authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
-      projectId: env.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: env.VITE_FIREBASE_APP_ID,
-      databaseId: env.VITE_FIREBASE_DATABASE_ID
+      apiKey: envVars.apiKey.trim(),
+      authDomain: envVars.authDomain?.trim() || `${envVars.projectId}.firebaseapp.com`,
+      projectId: envVars.projectId?.trim() || '',
+      storageBucket: envVars.storageBucket?.trim() || `${envVars.projectId}.firebasestorage.app`,
+      messagingSenderId: envVars.messagingSenderId?.trim() || '',
+      appId: envVars.appId?.trim() || '',
+      databaseId: envVars.databaseId?.trim()
     };
   }
 
-  // 2. Use Manual Configuration (firebaseConfig.ts)
-  if (FIREBASE_CONFIG.apiKey) {
-    console.log('Firebase: Using manual configuration from firebaseConfig.ts (Project: ' + FIREBASE_CONFIG.projectId + ')');
+  // 2. Check Manual Configuration (firebaseConfig.ts)
+  if (manual.apiKey && manual.apiKey.trim().length > 10) {
+    console.log('Firebase: Using Manual config from firebaseConfig.ts (Project: ' + manual.projectId + ')');
     return {
-      apiKey: FIREBASE_CONFIG.apiKey,
-      authDomain: FIREBASE_CONFIG.authDomain,
-      projectId: FIREBASE_CONFIG.projectId,
-      storageBucket: FIREBASE_CONFIG.storageBucket,
-      messagingSenderId: FIREBASE_CONFIG.messagingSenderId,
-      appId: FIREBASE_CONFIG.appId,
-      databaseId: (FIREBASE_CONFIG as any).databaseId
+      apiKey: manual.apiKey.trim(),
+      authDomain: manual.authDomain?.trim() || `${manual.projectId}.firebaseapp.com`,
+      projectId: manual.projectId?.trim() || '',
+      storageBucket: manual.storageBucket?.trim() || `${manual.projectId}.firebasestorage.app`,
+      messagingSenderId: manual.messagingSenderId?.trim() || '',
+      appId: manual.appId?.trim() || '',
+      databaseId: (manual as any).databaseId?.trim()
     };
   }
 
   // 3. Fallback to System Configuration (firebase-applet-config.json)
-  console.log('Firebase: Using default system configuration');
+  console.log('Firebase: Using System fallback config (Project: ' + firebaseConfigFromJson.projectId + ')');
   return {
     apiKey: firebaseConfigFromJson.apiKey,
     authDomain: firebaseConfigFromJson.authDomain,
@@ -50,6 +61,14 @@ function getSelectedConfig() {
 }
 
 const config = getSelectedConfig();
+
+// Debug log (safe)
+console.log('Firebase Config Active Keys:', Object.keys(config).filter(k => !!(config as any)[k]));
+if (config.apiKey) {
+  console.log(`Firebase API Key initialized (starts with ${config.apiKey.substring(0, 6)}..., length: ${config.apiKey.length})`);
+} else {
+  console.error('Firebase API Key is MISSING in selected config!');
+}
 
 const app = initializeApp({
   apiKey: config.apiKey,
