@@ -1,6 +1,14 @@
 name = "eduspeak-hub"
 compatibility_date = "2024-05-11"
-pages_build_output_dir = "dist"
+name = "eduspeak-hub"
+compatibility_date = "2024-05-11"
+
+[assets]
+directory = "./dist"
+
+[vars]
+VITE_APP_NAME = "EduSpeak: NCE English Hub"
+...
 
 [assets]
 directory = "./dist"
