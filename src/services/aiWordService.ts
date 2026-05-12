@@ -6,21 +6,31 @@ export interface GeneratedWord {
   phonetic: string;
   definition: string;
   example: string;
-  category: 'Academic' | 'Professional' | 'Literary' | 'Idiomatic';
+  synonyms: string[];
+  antonyms?: string[];
+  category: 'Academic' | 'Professional' | 'Literary' | 'Idiomatic' | 'Figure of Speech';
 }
 
-export async function generateNewWord(existingWords: string[]): Promise<GeneratedWord | null> {
-  const prompt = `Generate a unique, sophisticated English word for a Nigerian teacher's professional development. 
-  The word should be useful in a classroom, academic, or professional setting.
-  Avoid these previously generated words: ${existingWords.join(', ')}.
-  Provide the result in the following JSON format:
-  {
-    "word": "The word",
-    "phonetic": "The IPA phonetic transcription",
-    "definition": "A clear, professional definition",
-    "example": "A sentence using the word in a Nigerian educational context (e.g., mentioning schools, students, or the NCE curriculum)",
-    "category": "One of: Academic, Professional, Literary, Idiomatic"
-  }`;
+export async function generateNewWords(existingWords: string[], count: number = 1): Promise<GeneratedWord[]> {
+  const prompt = `Generate ${count} unique, sophisticated English word(s) or common figures of speech for a Nigerian teacher's professional development. 
+  The selection should be highly relevant for classroom teaching, academic writing, or professional education (NCE levels).
+  
+  For each entry, provide synonyms that a teacher could use to explain the word to students.
+  
+  Avoid these previously discussed words: ${existingWords.join(', ')}.
+  
+  Provide the result as a JSON array of objects:
+  [
+    {
+      "word": "The word or figure of speech",
+      "phonetic": "The IPA phonetic transcription",
+      "definition": "A clear, professional definition suitable for a teacher",
+      "example": "A sentence using it in a Nigerian educational or school setting",
+      "synonyms": ["synonym 1", "synonym 2"],
+      "antonyms": ["antonym 1", "antonym 2"],
+      "category": "One of: Academic, Professional, Literary, Idiomatic, Figure of Speech"
+    }
+  ]`;
 
   try {
     const response = await ai.models.generateContent({
@@ -29,26 +39,36 @@ export async function generateNewWord(existingWords: string[]): Promise<Generate
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            word: { type: Type.STRING },
-            phonetic: { type: Type.STRING },
-            definition: { type: Type.STRING },
-            example: { type: Type.STRING },
-            category: { 
-              type: Type.STRING,
-              enum: ['Academic', 'Professional', 'Literary', 'Idiomatic']
-            }
-          },
-          required: ['word', 'phonetic', 'definition', 'example', 'category']
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              word: { type: Type.STRING },
+              phonetic: { type: Type.STRING },
+              definition: { type: Type.STRING },
+              example: { type: Type.STRING },
+              synonyms: { type: Type.ARRAY, items: { type: Type.STRING } },
+              antonyms: { type: Type.ARRAY, items: { type: Type.STRING } },
+              category: { 
+                type: Type.STRING,
+                enum: ['Academic', 'Professional', 'Literary', 'Idiomatic', 'Figure of Speech']
+              }
+            },
+            required: ['word', 'phonetic', 'definition', 'example', 'synonyms', 'antonyms', 'category']
+          }
         }
       }
     });
 
     const text = response.text;
-    return JSON.parse(text) as GeneratedWord;
+    if (!text) throw new Error("No text returned from AI");
+    
+    // Fallback: strip markdown code blocks if the model included them
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const result = JSON.parse(cleanText);
+    return Array.isArray(result) ? result : [result];
   } catch (error) {
     console.error('AI Word Generation Error:', error);
-    return null;
+    return [];
   }
 }

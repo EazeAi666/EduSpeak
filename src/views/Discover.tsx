@@ -4,7 +4,7 @@ import { Sparkles, Volume2, Bookmark, BookmarkCheck, CheckCircle, ArrowRight, Re
 import { logActivity } from '../services/historyService';
 import { toggleBookmark, isBookmarked } from '../services/bookmarkService';
 import { getPreferredAccent } from '../services/settingsService';
-import { generateNewWord, GeneratedWord } from '../services/aiWordService';
+import { generateNewWords, GeneratedWord } from '../services/aiWordService';
 import { cn } from '../lib/utils';
 
 interface Word {
@@ -12,7 +12,9 @@ interface Word {
   phonetic: string;
   definition: string;
   example: string;
-  category: 'Academic' | 'Professional' | 'Literary' | 'Idiomatic';
+  category: 'Academic' | 'Professional' | 'Literary' | 'Idiomatic' | 'Figure of Speech';
+  synonyms?: string[];
+  antonyms?: string[];
 }
 
 const INITIAL_WORDS: Word[] = [
@@ -21,35 +23,45 @@ const INITIAL_WORDS: Word[] = [
     phonetic: '/ˈped.ə.ɡɒdʒ.i/',
     definition: 'The method and practice of teaching, especially as an academic subject or theoretical concept.',
     example: 'Modern pedagogy emphasizes student-centered learning rather than traditional lectures.',
-    category: 'Academic'
+    category: 'Academic',
+    synonyms: ['Education', 'Teaching', 'Instruction'],
+    antonyms: ['Ignorance', 'Learning (passive)']
   },
   {
     word: 'Eloquence',
     phonetic: '/ˈel.ə.kwəns/',
     definition: 'Fluent or persuasive speaking or writing.',
     example: 'The primary school teacher was praised for her eloquence during the graduation ceremony.',
-    category: 'Literary'
+    category: 'Literary',
+    synonyms: ['Fluency', 'Articulation', 'Expressiveness'],
+    antonyms: ['Inarticulateness', 'Hesitation']
   },
   {
     word: 'Curriculum',
     phonetic: '/kəˈrɪk.jə.ləm/',
     definition: 'The subjects comprising a course of study in a school or college.',
     example: 'The Nigerian NCE curriculum is being updated to reflect 21st-century teaching methods.',
-    category: 'Professional'
+    category: 'Professional',
+    synonyms: ['Syllabus', 'Course of Study', 'Program'],
+    antonyms: []
   },
   {
     word: 'Epiphany',
     phonetic: '/ɪˈpɪf.ə.ni/',
     definition: 'A moment of sudden and great revelation or realization.',
     example: 'The student had an epiphany and finally understood the rules of phonetic transcription.',
-    category: 'Literary'
+    category: 'Literary',
+    synonyms: ['Revelation', 'Discovery', 'Flash of insight'],
+    antonyms: ['Confusion', 'Darkness']
   },
   {
     word: 'Didactic',
     phonetic: '/daɪˈdæk.tɪk/',
     definition: 'Intended to teach, particularly in having moral instruction as an ulterior motive.',
     example: 'Her didactic approach helped the students internalize the social studies concepts quickly.',
-    category: 'Academic'
+    category: 'Academic',
+    synonyms: ['Instructive', 'Educative', 'Moralistic'],
+    antonyms: ['Uninstructive', 'Entertaining']
   }
 ];
 
@@ -77,11 +89,11 @@ export default function Discover() {
     setIsRefreshing(true);
     setError(null);
     
-    // If at the end of the list or in AI mode, generate a new word
+    // If at the end of the list or in AI mode, generate new words
     if (aiMode || currentIndex === words.length - 1) {
-      const newWord = await generateNewWord(words.map(w => w.word));
-      if (newWord) {
-        setWords(prev => [...prev, newWord]);
+      const newWords = await generateNewWords(words.map(w => w.word), aiMode ? 3 : 1);
+      if (newWords && newWords.length > 0) {
+        setWords(prev => [...prev, ...newWords]);
         setCurrentIndex(words.length);
         setIsLearned(false);
         setIsRefreshing(false);
@@ -204,6 +216,32 @@ export default function Discover() {
                   <div className="space-y-4">
                     <h4 className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/30">Definition</h4>
                     <p className="text-xl leading-relaxed text-[#1A1A1A]/80">{currentWord.definition}</p>
+                    
+                    {currentWord.synonyms && currentWord.synonyms.length > 0 && (
+                      <div className="pt-4 space-y-2">
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#5A5A40]/60">Synonyms</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {currentWord.synonyms.map(s => (
+                            <span key={s} className="px-3 py-1 bg-[#F5F2ED] text-[#1A1A1A]/60 rounded-lg text-sm font-medium">
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {currentWord.antonyms && currentWord.antonyms.length > 0 && (
+                      <div className="pt-4 space-y-2">
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-rose-500/60">Antonyms</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {currentWord.antonyms.map(s => (
+                            <span key={s} className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-sm font-medium">
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-4">
                     <h4 className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/30">Example Sentence</h4>

@@ -167,9 +167,9 @@ export default function Home({ setView }: HomeProps) {
   ] as const;
 
   const quickMasteries = [
-    { title: 'Punctuation', icon: TypeIcon, color: 'text-blue-500', bgColor: 'bg-blue-50' },
-    { title: 'Figures of Speech', icon: Quote, color: 'text-purple-500', bgColor: 'bg-purple-50' },
-    { title: 'Synonyms', icon: Hash, color: 'text-emerald-500', bgColor: 'bg-emerald-50' },
+    { title: 'Punctuation', icon: TypeIcon, color: 'text-blue-500', bgColor: 'bg-blue-50', moduleId: 'punc-1', dept: 'specialized' },
+    { title: 'Figures of Speech', icon: Quote, color: 'text-purple-500', bgColor: 'bg-purple-50', moduleId: 'lit-figures-1', dept: 'specialized' },
+    { title: 'Synonyms', icon: Hash, color: 'text-emerald-500', bgColor: 'bg-emerald-50', moduleId: 'vocab-1', dept: 'specialized' },
   ];
 
   return (

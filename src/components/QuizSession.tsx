@@ -88,7 +88,9 @@ export default function QuizSession({ moduleTitle, department, onBack }: QuizSes
       const text = response.text;
       
       if (text) {
-        setQuestions(JSON.parse(text));
+        // Fallback: strip markdown code blocks if the model included them
+        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        setQuestions(JSON.parse(cleanText));
       }
     } catch (err) {
       console.error(err);
