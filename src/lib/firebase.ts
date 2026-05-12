@@ -2,19 +2,20 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
 import { getFirestore, enableMultiTabIndexedDbPersistence, doc, getDocFromServer, serverTimestamp } from 'firebase/firestore';
 import firebaseConfigFromJson from '../../firebase-applet-config.json';
+import { FIREBASE_CONFIG } from './firebaseConfig';
 
 const env = import.meta.env;
 
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || firebaseConfigFromJson.apiKey,
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigFromJson.authDomain,
-  projectId: env.VITE_FIREBASE_PROJECT_ID || firebaseConfigFromJson.projectId,
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfigFromJson.storageBucket,
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfigFromJson.messagingSenderId,
-  appId: env.VITE_FIREBASE_APP_ID || firebaseConfigFromJson.appId,
+  apiKey: env.VITE_FIREBASE_API_KEY || FIREBASE_CONFIG.apiKey || firebaseConfigFromJson.apiKey,
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || FIREBASE_CONFIG.authDomain || firebaseConfigFromJson.authDomain,
+  projectId: env.VITE_FIREBASE_PROJECT_ID || FIREBASE_CONFIG.projectId || firebaseConfigFromJson.projectId,
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || FIREBASE_CONFIG.storageBucket || firebaseConfigFromJson.storageBucket,
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || FIREBASE_CONFIG.messagingSenderId || firebaseConfigFromJson.messagingSenderId,
+  appId: env.VITE_FIREBASE_APP_ID || FIREBASE_CONFIG.appId || firebaseConfigFromJson.appId,
 };
 
-const databaseId = env.VITE_FIREBASE_DATABASE_ID || firebaseConfigFromJson.firestoreDatabaseId || '(default)';
+const databaseId = env.VITE_FIREBASE_DATABASE_ID || FIREBASE_CONFIG.databaseId || firebaseConfigFromJson.firestoreDatabaseId || '(default)';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
