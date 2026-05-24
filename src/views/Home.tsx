@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles, Flame, Trophy, Bookmark, BookmarkCheck, Volume2, Type as TypeIcon, Quote, Hash } from 'lucide-react';
+import { BookOpen, GraduationCap, Languages, Library, Search, Clock, History, Sparkles, Flame, Trophy, Bookmark, BookmarkCheck, Volume2, Type as TypeIcon, Quote, Hash, Smartphone, Download, QrCode, Share2, Plus, ArrowUpRight } from 'lucide-react';
 import { View, Department } from '../types';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType, getEffectiveUserId } from '../lib/firebase';
@@ -21,6 +21,47 @@ export default function Home({ setView, onNavigateToTraining }: HomeProps) {
   const [loading, setLoading] = React.useState(true);
   const [connectionError, setConnectionError] = React.useState(false);
   const [isWordSaved, setIsWordSaved] = React.useState(false);
+
+  // PWA installation states
+  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+  const [isInstallable, setIsInstallable] = React.useState(false);
+  const [activeInstallTab, setActiveInstallTab] = React.useState<'native' | 'ios' | 'qr'>('native');
+
+  React.useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // If app is already installed or running in standalone mode
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstallable(false);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      alert("Please check your browser menu (e.g., three dots or share button) and select 'Add to Home screen' or 'Install' to add the app manually.");
+      return;
+    }
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstallable(false);
+      }
+      setDeferredPrompt(null);
+    } catch (e) {
+      console.error('Error triggering PWA install:', e);
+    }
+  };
 
   // Word of the day logic
   const today = new Date().toDateString();
@@ -379,11 +420,108 @@ export default function Home({ setView, onNavigateToTraining }: HomeProps) {
             </div>
           </div>
 
-          <div className="bg-[#5A5A40]/5 p-8 rounded-3xl border border-[#5A5A40]/10">
-            <h3 className="text-lg font-serif mb-2">PWA Tip</h3>
-            <p className="text-sm text-[#1A1A1A]/60">
-              Install EduSpeak on your home screen for offline access to phonetics charts and curriculum guides.
+          <div className="bg-white p-8 rounded-3xl border border-[#1A1A1A]/5 shadow-sm space-y-6">
+            <div className="flex items-center gap-3">
+              <Smartphone className="w-5 h-5 text-[#5A5A40]" />
+              <h2 className="text-xl font-serif">Offline Installation</h2>
+            </div>
+            
+            <p className="text-sm text-[#1A1A1A]/60 leading-relaxed">
+              Install <strong>EduSpeak</strong> on your phone to run it in offline-first mode, directly from your home screen just like a native app.
             </p>
+
+            {/* Tab selection */}
+            <div className="grid grid-cols-3 gap-1 bg-[#F5F2ED] p-1 rounded-xl text-xs">
+              <button
+                onClick={() => setActiveInstallTab('native')}
+                key="tab-native"
+                className={cn(
+                  "py-1.5 rounded-lg font-bold transition-all cursor-pointer",
+                  activeInstallTab === 'native' ? "bg-[#5A5A40] text-white shadow" : "text-[#1A1A1A]/50 hover:text-[#5A5A40]"
+                )}
+              >
+                In-App Install {isInstallable ? '🟢' : ''}
+              </button>
+              <button
+                onClick={() => setActiveInstallTab('ios')}
+                key="tab-ios"
+                className={cn(
+                  "py-1.5 rounded-lg font-bold transition-all cursor-pointer",
+                  activeInstallTab === 'ios' ? "bg-[#5A5A40] text-white shadow" : "text-[#1A1A1A]/50 hover:text-[#5A5A40]"
+                )}
+              >
+                iOS / Safari
+              </button>
+              <button
+                onClick={() => setActiveInstallTab('qr')}
+                key="tab-qr"
+                className={cn(
+                  "py-1.5 rounded-lg font-bold transition-all cursor-pointer",
+                  activeInstallTab === 'qr' ? "bg-[#5A5A40] text-white shadow" : "text-[#1A1A1A]/50 hover:text-[#5A5A40]"
+                )}
+              >
+                Scan QR
+              </button>
+            </div>
+
+            {/* Tab content */}
+            <div className="space-y-4">
+              {activeInstallTab === 'native' && (
+                <div className="space-y-4 animate-fade-in">
+                  <p className="text-xs text-[#1A1A1A]/70 leading-relaxed">
+                    If you are using Google Chrome or any compatible desktop or Android browser, you can install the app instantly.
+                  </p>
+                  <button
+                    onClick={handleInstallClick}
+                    className="w-full py-3 bg-[#5A5A40] hover:bg-[#5A5A40]/95 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" /> Install Native App
+                  </button>
+                  {!isInstallable && (
+                    <p className="text-[10px] text-[#1A1A1A]/40 text-center uppercase tracking-wider leading-relaxed">
+                      If the button is inactive, simply use your browser's menu (e.g. three dots) and select <b>"Install"</b> or <b>"Add to Home screen"</b>.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {activeInstallTab === 'ios' && (
+                <div className="space-y-3 text-xs text-[#1A1A1A]/75 animate-fade-in">
+                  <p className="leading-relaxed font-medium">Safari on iOS/iPhone requires manual installation:</p>
+                  <ol className="list-decimal pl-4 space-y-2 text-[#1A1A1A]/75">
+                    <li>Open <b>Safari</b> on your iPhone or iPad</li>
+                    <li>Tap the <b>Share</b> button <span className="inline-flex items-center justify-center p-1 bg-[#F5F2ED] rounded border border-[#1A1A1A]/5"><Share2 className="w-3 h-3 text-[#5A5A40]" /></span> at the bottom</li>
+                    <li>Scroll down and select <b>"Add to Home Screen"</b> <span className="inline-flex items-center justify-center p-1 bg-[#F5F2ED] rounded border border-[#1A1A1A]/5"><Plus className="w-3 h-3 text-[#5A5A40]" /></span></li>
+                  </ol>
+                  <p className="text-[10px] text-[#1A1A1A]/40 italic">Once added, slide to your home screen and open the brand-new icon for the full application experience.</p>
+                </div>
+              )}
+
+              {activeInstallTab === 'qr' && (
+                <div className="space-y-3 flex flex-col items-center text-center animate-fade-in">
+                  <p className="text-xs text-[#1A1A1A]/70 leading-relaxed">
+                    Scan this QR code with your phone camera to open and install the application directly onto your mobile device:
+                  </p>
+                  <div className="bg-[#F5F2ED] p-3 rounded-2xl border border-[#1A1A1A]/5 shadow-inner">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.href)}`}
+                      alt="Install QR Code"
+                      className="w-32 h-32 object-contain"
+                      id="pwa-qr-img"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <a
+                    href={window.location.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-bold text-[#5A5A40] hover:underline flex items-center gap-1 mt-1"
+                  >
+                    Open Live Link <ArrowUpRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
