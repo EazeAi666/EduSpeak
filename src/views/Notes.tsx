@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Search, Trash2, Edit3, Save, X, StickyNote, Mic, Volume2 } from 'lucide-react';
+import { Plus, Search, Trash2, Edit3, Save, X, StickyNote, Mic, Volume2, FileDown } from 'lucide-react';
 import { saveNote, updateNote, deleteNote, subscribeToNotes, Note } from '../services/noteService';
 import { getPreferredAccent } from '../services/settingsService';
+import { jsPDF } from 'jspdf';
 
 export default function Notes() {
   const [notes, setNotes] = React.useState<Note[]>([]);
@@ -16,6 +17,178 @@ export default function Notes() {
       setNotes(fetchedNotes);
     });
   }, []);
+
+  const exportNoteToPDF = (note: Partial<Note>) => {
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth(); // A4 usually 210
+      const pageHeight = doc.internal.pageSize.getHeight(); // A4 usually 297
+      const margin = 20;
+      const contentWidth = pageWidth - (margin * 2); // 170
+
+      const primaryColor = [90, 90, 64]; // #5A5A40 (Sage Green / Dark Olive)
+      const secondaryColor = [26, 26, 26]; // #1A1A1A (Charcoal)
+      const mutedColor = [110, 110, 110]; // Muted Grey for small labels
+      const lightLineColor = [225, 220, 215]; // Fine light grey border
+
+      let pageNum = 1;
+
+      // Header and Footer drawer helper
+      const drawHeaderAndFooter = () => {
+        // Decorative top bar in sage green
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(margin, 12, contentWidth, 1.5, 'F');
+
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text('EDUSPEAK STUDY SYSTEM', margin, 18);
+
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(mutedColor[0], mutedColor[1], mutedColor[2]);
+        doc.text('National Certificate in Education (NCE) Companion', pageWidth - margin, 18, { align: 'right' });
+
+        // Fine divider line below header
+        doc.setDrawColor(lightLineColor[0], lightLineColor[1], lightLineColor[2]);
+        doc.setLineWidth(0.25);
+        doc.line(margin, 20.5, pageWidth - margin, 20.5);
+
+        // Elegant bottom line and footer
+        doc.setDrawColor(lightLineColor[0], lightLineColor[1], lightLineColor[2]);
+        doc.setLineWidth(0.25);
+        doc.line(margin, pageHeight - 14, pageWidth - margin, pageHeight - 14);
+
+        doc.setFontSize(7.5);
+        doc.setTextColor(mutedColor[0], mutedColor[1], mutedColor[2]);
+        doc.text('Classroom Study Material • Public Educational Resource', margin, pageHeight - 9);
+        doc.text(`Page ${pageNum}`, pageWidth - margin, pageHeight - 9, { align: 'right' });
+      };
+
+      // Draw standard header and footer on initial page
+      drawHeaderAndFooter();
+
+      let y = 30;
+
+      // Note Title
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+      
+      const titleLines = doc.splitTextToSize(note.title || 'Untitled Study Note', contentWidth);
+      titleLines.forEach((line: string) => {
+        if (y > pageHeight - 30) {
+          doc.addPage();
+          pageNum++;
+          drawHeaderAndFooter();
+          y = 30;
+          doc.setFont('Helvetica', 'bold');
+          doc.setFontSize(20);
+          doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+        }
+        doc.text(line, margin, y);
+        y += 8.5;
+      });
+
+      y += 1.5; // subtle divider spacing
+
+      // Metadata card
+      let creationDateStr = '';
+      if (note.timestamp) {
+        if (typeof note.timestamp.toDate === 'function') {
+          creationDateStr = note.timestamp.toDate().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        } else if (note.timestamp instanceof Date) {
+          creationDateStr = note.timestamp.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        } else {
+          creationDateStr = new Date(note.timestamp).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+      } else {
+        creationDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      }
+
+      const tagsList = note.tags && note.tags.length > 0 ? note.tags.join(', ').toUpperCase() : 'GENERAL STUDY';
+
+      // Meta box backdrop
+      doc.setFillColor(245, 242, 237); // Warm paper tint
+      doc.rect(margin, y, contentWidth, 11, 'F');
+      
+      // Accent vertical line inside meta box
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(margin, y, 1.2, 11, 'F');
+
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text(`NCE SYLLABUS DOMAIN: ${tagsList}`, margin + 4, y + 4.5);
+      
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+      doc.text(`RECORDED ON: ${creationDateStr.toUpperCase()}`, margin + 4, y + 8);
+
+      y += 18; // safe gap before content body
+
+      // Heading block for study notes
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text('CORE LESSON NOTES & SUMMARY', margin, y);
+      y += 4.5;
+
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(margin, y, 32, 0.4, 'F'); // sleek little summary line anchor
+      y += 7.5;
+
+      // Note content body printing with line-by-line wrapping logic
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+
+      const rawContent = note.content || 'No notes contents provided.';
+      const paragraphs = rawContent.split('\n');
+      const lineHeight = 5.8;
+
+      paragraphs.forEach((pText) => {
+        const cleanParagraph = pText.trim();
+        if (!cleanParagraph) {
+          y += 3.5; // empty space paragraph
+          return;
+        }
+
+        const lines = doc.splitTextToSize(cleanParagraph, contentWidth);
+        lines.forEach((line: string) => {
+          if (y > pageHeight - 20) {
+            doc.addPage();
+            pageNum++;
+            drawHeaderAndFooter();
+            y = 28;
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(60, 60, 60);
+          }
+          doc.text(line, margin, y);
+          y += lineHeight;
+        });
+        y += 2.5; // margin gap between paragraphs
+      });
+
+      // Filename mapping
+      const cleanFileName = (note.title || 'untitled-note')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') || 'study-note';
+
+      doc.save(`eduspeak-study-note-${cleanFileName}.pdf`);
+    } catch (err) {
+      console.error('Error generating study note PDF:', err);
+      alert('We were unable to print your PDF. Please ensure all details are correct.');
+    }
+  };
 
   const handleCreateNew = () => {
     setCurrentNote({ title: '', content: '', tags: [] });
@@ -129,16 +302,25 @@ export default function Notes() {
                 <span className="text-[10px] uppercase font-mono tracking-widest text-[#1A1A1A]/30">
                   {note.timestamp?.toDate().toLocaleDateString() || 'Just now'}
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                    <button 
                     onClick={(e) => { e.stopPropagation(); speakNote(note.content); }}
-                    className="p-2 text-[#1A1A1A]/20 hover:text-[#5A5A40] transition-colors"
+                    className="p-2 text-[#1A1A1A]/30 hover:text-[#5A5A40] hover:bg-[#F5F2ED] rounded-xl transition-all"
+                    title="Read aloud"
                   >
                     <Volume2 size={16} />
                   </button>
                   <button 
+                    onClick={(e) => { e.stopPropagation(); exportNoteToPDF(note); }}
+                    className="p-2 text-[#1A1A1A]/30 hover:text-[#5A5A40] hover:bg-[#F5F2ED] rounded-xl transition-all"
+                    title="Export as PDF"
+                  >
+                    <FileDown size={16} />
+                  </button>
+                  <button 
                     onClick={(e) => handleDelete(note.id!, e)}
-                    className="p-2 text-[#1A1A1A]/20 hover:text-red-500 transition-colors"
+                    className="p-2 text-[#1A1A1A]/30 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    title="Delete note"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -199,6 +381,19 @@ export default function Notes() {
               </div>
 
               <div className="flex gap-4">
+                <button 
+                  onClick={() => {
+                    if (currentNote?.title && currentNote?.content) {
+                      exportNoteToPDF(currentNote);
+                    } else {
+                      alert('Please provide a title and notes content first.');
+                    }
+                  }}
+                  className="px-6 bg-[#F5F2ED] hover:bg-[#5A5A40]/10 text-[#5A5A40] py-5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  title="Download and print note as classroom physical layout PDF"
+                >
+                  <FileDown size={20} /> Export PDF
+                </button>
                 <button 
                   onClick={handleSave}
                   className="flex-1 bg-[#5A5A40] text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-xl shadow-[#5A5A40]/20"
